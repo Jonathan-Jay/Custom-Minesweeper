@@ -30,6 +30,8 @@ public class Minesweeper : MonoBehaviour
 
 	public bool waitingForClick {get => firstClick == -Vector2Int.one; private set => waitingForClick = value;}
 	public Vector2Int firstClick {get; private set;} = -Vector2Int.one;
+	private float startTime = -1;
+	public float time {get => startTime < 0f ? 0f : Time.time - startTime; private set => time = value;}
 
 	void Awake()
 	{
@@ -70,6 +72,7 @@ public class Minesweeper : MonoBehaviour
 		}
 
 		firstClick = -Vector2Int.one;
+		startTime = -1;
 	}
 
 	public void Click(Vector2Int pos)
@@ -102,6 +105,7 @@ public class Minesweeper : MonoBehaviour
 			}
 
 			firstClick = pos;
+			startTime = Time.time;
 		}
 
 		if (visibleGrid.GetCell(pos) || hintGrid.GetCell(pos).flagValue > 0)	return;

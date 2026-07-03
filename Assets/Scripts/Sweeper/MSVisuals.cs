@@ -7,6 +7,7 @@ public class MSVisuals : MonoBehaviour
 	[SerializeField] Tile tileTemplate;
 	[SerializeField] Transform canvas;
 	[SerializeField] TMPro.TMP_Text text;
+	[SerializeField] TMPro.TMP_Text timeText;
 	[SerializeField] TMPro.TMP_Text seedText;
 	NodeGrid<Tile> board;
 	Minesweeper game;
@@ -46,6 +47,11 @@ public class MSVisuals : MonoBehaviour
 		}
 
 		SetupGame(false);
+	}
+
+	void Update()
+	{
+		timeText.text = "Time: " + game.time.ToString("0.00");
 	}
 
 	public void SetupGameSameBreak()
