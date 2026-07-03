@@ -47,9 +47,9 @@ public class Minesweeper : MonoBehaviour
 
 		bombList.Clear();
 
-		if (waitingForClick)
+		if (!waitingForClick)
 		{
-			visibleGrid.Reset();
+			Array.Clear(visibleGrid.linearGrid, 0, size.x * size.y);
 			foreach (Hint hint in hintGrid.linearGrid)
 			{
 				hint.Reset();
@@ -60,6 +60,7 @@ public class Minesweeper : MonoBehaviour
 		{
 			if (bombPair == null)	continue;
 
+			bombPair.flagCount = 0;
 			for (int c = 0; c < bombPair.count;)
 			{
 				Vector2Int newPos = GetPos(bombPair.bomb);

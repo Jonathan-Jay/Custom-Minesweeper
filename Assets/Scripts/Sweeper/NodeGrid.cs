@@ -20,11 +20,6 @@ public class NodeGrid<T>
 			linearGrid = new T[size.x * size.y];
 	}
 
-	public void Reset()
-	{
-		linearGrid = new T[size.x * size.y];
-	}
-
 	public bool CheckCell(Vector2Int pos)
 	{
 		if (pos.x >= 0 && pos.x < size.x && pos.y >= 0 && pos.y < size.y)
