@@ -15,6 +15,7 @@ public class Hint : INode
 		}
 	}
 	public int actualValue;
+	//Use negative values for found mines
 	public int flagValue = 0;
 	public event Action valueChanged;
 

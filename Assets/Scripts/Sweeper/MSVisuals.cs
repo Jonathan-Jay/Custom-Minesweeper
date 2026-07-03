@@ -5,21 +5,22 @@ using UnityEngine.UI;
 public class MSVisuals : MonoBehaviour
 {
 	[SerializeField] Tile tileTemplate;
-	[SerializeField] Transform canvas;
+	[SerializeField] RectTransform boardParent;
 	[SerializeField] TMPro.TMP_Text text;
 	[SerializeField] TMPro.TMP_Text timeText;
+	[SerializeField] TMPro.TMP_Text winText;
 	[SerializeField] TMPro.TMP_Text seedText;
 	NodeGrid<Tile> board;
 	Minesweeper game;
 
 	bool useFlags = false;
-	int tileCount;
 
 	void Awake()
 	{
 		game = GetComponent<Minesweeper>();
 		game.visibilityChanged += Reveal;
 		game.flagChanged += UpdateFlag;
+		game.winEvent += () => winText.gameObject.SetActive(true);
 
 		board = new NodeGrid<Tile>(game.size);
 	}
@@ -35,7 +36,7 @@ public class MSVisuals : MonoBehaviour
 		{
 			for (pos.y = 0; pos.y < game.size.y; ++pos.y)
 			{
-				Tile tile = Instantiate(tileTemplate, canvas);
+				Tile tile = Instantiate(tileTemplate, boardParent);
 				tile.GetComponent<RectTransform>().anchoredPosition = offset + new Vector2(pos.x * tileSize.x, pos.y * tileSize.y);
 				tile.pos = pos;
 				tile.hint = game.GetHint(pos);
@@ -67,6 +68,8 @@ public class MSVisuals : MonoBehaviour
 
 	public void SetupGame(bool newSeed)
 	{
+		winText.gameObject.SetActive(false);
+
 		if (!game.waitingForClick)
 		{
 			foreach (Tile tile in board.linearGrid)
@@ -81,13 +84,6 @@ public class MSVisuals : MonoBehaviour
 
 		seedText.text = "Seed: " + game.seed;
 
-		tileCount = game.size.x * game.size.y;
-		foreach (var bombPair in game.bombOptions)
-		{
-			if (bombPair == null) continue;
-
-			tileCount -= bombPair.count;
-		}
 		DoText();
 	}
 
@@ -105,8 +101,6 @@ public class MSVisuals : MonoBehaviour
 	void Reveal(Vector2Int pos)
 	{
 		Tile tile = board.GetCell(pos);
-		if (!tile.hasValue)
-			tileCount -= 1;
 		tile.Reveal(useFlags);
 		DoText();
 	}
@@ -119,12 +113,14 @@ public class MSVisuals : MonoBehaviour
 
 	void DoText()
 	{
-		text.text = (useFlags ? "Flag hints: On - Tiles remaining: " : "Flag hints: Off - Tiles remaining: ") + tileCount;
+		text.text = (useFlags ? "Flag hints: On - Tiles remaining: " : "Flag hints: Off - Tiles remaining: ") + game.tileCount;
 		foreach (var bombPair in game.bombOptions)
 		{
 			if (bombPair == null)	continue;
 			
 			text.text += " - " + bombPair.bomb.name + ": " + bombPair.flagCount + "/" + bombPair.count;
 		}
+
+		text.text += " - Mistakes: " + game.mistakes;
 	}
 }

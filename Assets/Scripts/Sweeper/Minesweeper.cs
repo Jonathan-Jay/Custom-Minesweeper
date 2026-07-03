@@ -26,12 +26,16 @@ public class Minesweeper : MonoBehaviour
 	NodeGrid<bool> visibleGrid;
 	public event Action<Vector2Int> visibilityChanged;
 	public event Action<Vector2Int> flagChanged;
+	public event Action winEvent;
 	Dictionary<Vector2Int, Bomb> bombList = new Dictionary<Vector2Int, Bomb>();
 
 	public bool waitingForClick {get => firstClick == -Vector2Int.one; private set => waitingForClick = value;}
 	public Vector2Int firstClick {get; private set;} = -Vector2Int.one;
-	private float startTime = -1;
-	public float time {get => startTime < 0f ? 0f : Time.time - startTime; private set => time = value;}
+	private float winTime = 0f;
+	public float time {get => winTime >= 0f ? winTime : Time.time + winTime; private set => winTime = -value;}
+	public int tileCount {get; private set;} = 0;
+	public int mistakes {get; private set;} = 0;
+	//public int bombCount {get; private set;} = 0;
 
 	void Awake()
 	{
@@ -39,6 +43,15 @@ public class Minesweeper : MonoBehaviour
 		visibleGrid = new NodeGrid<bool>(size);
 
 		bombOptions.Insert(0, null);
+
+		visibilityChanged += (Vector2Int pos) => {
+			if (!bombList.ContainsKey(pos))
+				if (--tileCount <= 0)
+				{
+					winTime = Time.time;
+					winEvent?.Invoke();
+				}
+		};
 	}
 
 	public void Generate()
@@ -58,11 +71,13 @@ public class Minesweeper : MonoBehaviour
 			}
 		}
 
+		int bombCount = 0;
 		foreach (BombPair bombPair in bombOptions)
 		{
 			if (bombPair == null)	continue;
 
 			bombPair.flagCount = 0;
+			bombCount += bombPair.count;
 			for (int c = 0; c < bombPair.count;)
 			{
 				Vector2Int newPos = GetPos(bombPair.bomb);
@@ -70,9 +85,11 @@ public class Minesweeper : MonoBehaviour
 					++c;
 			}
 		}
+		tileCount = size.x * size.y - bombCount;
 
 		firstClick = -Vector2Int.one;
-		startTime = -1;
+		time = 0f;
+		mistakes = 0;
 	}
 
 	public void Click(Vector2Int pos)
@@ -105,7 +122,7 @@ public class Minesweeper : MonoBehaviour
 			}
 
 			firstClick = pos;
-			startTime = Time.time;
+			time = Time.time;
 		}
 
 		if (visibleGrid.GetCell(pos) || hintGrid.GetCell(pos).flagValue > 0)	return;
@@ -113,6 +130,28 @@ public class Minesweeper : MonoBehaviour
 		//Deal with spread, just check for neighbouring unchecked
 		visibleGrid.SetCell(pos, true);
 		visibilityChanged?.Invoke(pos);
+
+		if (bombList.ContainsKey(pos))
+		{
+			mistakes += 1;
+			Bomb bomb = bombList[pos];
+			Hint hint = hintGrid.GetCell(pos);
+			int index = 1;
+			for (;index < bombOptions.Count; ++index)
+			{
+				if (bombOptions[index].bomb == bomb)
+					break;
+			}
+
+			//guaranteed flags are marked with negative values
+			hint.flagValue = -index;
+			bombOptions[index].flagCount += 1;
+			bombOptions[index].bomb.UpdateHints(pos, hintGrid, true, -1);
+
+			flagChanged?.Invoke(pos);
+			return;
+		}
+
 		if (hintGrid.GetCell(pos).actualValue != 0)
 			return;
 
@@ -145,17 +184,19 @@ public class Minesweeper : MonoBehaviour
 	{
 		if ((visibleGrid.GetCell(pos) && !bombList.ContainsKey(pos)) || waitingForClick)	return;
 		
-		Hint cell = hintGrid.GetCell(pos);
-		if (cell.flagValue != 0)
+		Hint hint = hintGrid.GetCell(pos);
+		if (hint.flagValue < 0)	return;
+
+		if (hint.flagValue != 0)
 		{
-			bombOptions[cell.flagValue].flagCount -= 1;
-			bombOptions[cell.flagValue].bomb.UpdateHints(pos, hintGrid, true, 1);
+			bombOptions[hint.flagValue].flagCount -= 1;
+			bombOptions[hint.flagValue].bomb.UpdateHints(pos, hintGrid, true, 1);
 		}
-		cell.flagValue = (cell.flagValue + 1) % bombOptions.Count;
-		if (cell.flagValue != 0)
+		hint.flagValue = (hint.flagValue + 1) % bombOptions.Count;
+		if (hint.flagValue != 0)
 		{
-			bombOptions[cell.flagValue].flagCount += 1;
-			bombOptions[cell.flagValue].bomb.UpdateHints(pos, hintGrid, true, -1);
+			bombOptions[hint.flagValue].flagCount += 1;
+			bombOptions[hint.flagValue].bomb.UpdateHints(pos, hintGrid, true, -1);
 		}
 		
 		flagChanged?.Invoke(pos);
@@ -168,7 +209,7 @@ public class Minesweeper : MonoBehaviour
 
 	public Sprite GetFlag(Vector2Int pos)
 	{
-		return bombOptions[hintGrid.GetCell(pos).flagValue]?.bomb.sprite;
+		return bombOptions[Mathf.Abs(hintGrid.GetCell(pos).flagValue)]?.bomb.sprite;
 	}
 
 	bool InBounds(Vector2Int pos, Vector2Int minBounds, Vector2Int maxBounds)

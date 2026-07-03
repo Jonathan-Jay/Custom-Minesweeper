@@ -8,8 +8,8 @@ public class Tile : MonoBehaviour, IPointerClickHandler
 	public Vector2Int pos;
 	public event Action<Vector2Int> callbackL;
 	public event Action<Vector2Int> callbackR;
-	[SerializeField] Sprite tileImg;
-	[SerializeField] Image sprite;
+	[SerializeField] Image flag;
+	[SerializeField] Image tile;
 	[SerializeField] TMPro.TMP_Text text;
 	public Hint hint;
 
@@ -17,8 +17,9 @@ public class Tile : MonoBehaviour, IPointerClickHandler
 
 	public void Hide(bool useFlags)
 	{
-		sprite.gameObject.SetActive(true);
-		sprite.sprite = tileImg;
+		flag.gameObject.SetActive(false);
+		tile.gameObject.SetActive(true);
+		tile.color = Color.white;
 
 		if (hasValue && useFlags)
 			hint.valueChanged -= UpdateText;
@@ -29,7 +30,9 @@ public class Tile : MonoBehaviour, IPointerClickHandler
 
 	public void Reveal(bool useFlags)
 	{
-		sprite.gameObject.SetActive(false);
+		tile.gameObject.SetActive(false);
+
+		if (hint.flagValue < 0)	return;
 
 		int hintVal = useFlags ? hint.displayValue : hint.actualValue;
 
@@ -44,11 +47,12 @@ public class Tile : MonoBehaviour, IPointerClickHandler
 			if ((hintVal == 0 && text.text == "") || hintVal.ToString() == text.text)	return;
 		}
 
-		string hintText = hint.actualValue < 0 ? "X" : hintVal.ToString();
+		string hintText = hint.actualValue < 0 ? "" : hintVal.ToString();
 
 		if (useFlags)
 		{
-			hint.valueChanged += UpdateText;
+			if (!hasValue)
+				hint.valueChanged += UpdateText;
 			
 			if (hint.actualValue == 0)
 				hintText = "";
@@ -73,15 +77,12 @@ public class Tile : MonoBehaviour, IPointerClickHandler
 
 	public void SetFlag(Sprite flagImg)
 	{
-		if (hasValue)
-		{
-			if (flagImg)
-				sprite.gameObject.SetActive(true);
-			else
-				sprite.gameObject.SetActive(false);
-		}
+		if (flagImg)
+			flag.gameObject.SetActive(true);
+		else
+			flag.gameObject.SetActive(false);
 			
-		sprite.sprite = flagImg ? flagImg : tileImg;
+		flag.sprite = flagImg;
 	}
 
 	public void OnPointerClick(PointerEventData eventData)
