@@ -15,6 +15,11 @@
 /[Uu]ser[Ss]ettings/
 *.log
 
+# These are used to ignore any non-build script for this specific branch
+/[Aa]ssets/
+/[Pp]ackages/
+/[Pp]roject[Ss]ettings/
+
 # By default unity supports Blender asset imports, *.blend1 blender files do not need to be commited to version control.
 *.blend1
 *.blend1.meta
