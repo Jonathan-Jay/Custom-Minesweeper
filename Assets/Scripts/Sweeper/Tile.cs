@@ -1,78 +1,98 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class Tile : MonoBehaviour, IPointerClickHandler
+public class Tile : MonoBehaviour, IPointerEnterHandler
 {
 	public Vector2Int pos;
-	public event Action<Vector2Int> callbackL;
-	public event Action<Vector2Int> callbackR;
+	public Action<Vector2Int> callbackL;
+	public Action<Vector2Int> callbackR;
+	public Action<Vector2Int> callbackM;
+	public Hint hint;
+	public MSVisuals visuals;
+
 	[SerializeField] Image flag;
 	[SerializeField] Image tile;
 	[SerializeField] TMPro.TMP_Text text;
-	public Hint hint;
-
+	
 	public bool hasValue = false;
+	short hoveredOver = -1;
 
-	public void Hide(bool useFlags)
+	RectTransform rect;
+
+	void Awake()
+	{
+		rect = GetComponent<RectTransform>();
+	}
+	
+	public void OnPointerEnter(PointerEventData eventData)
+	{
+		HoverHandler.held = this;
+
+		if (HoverHandler.button == hoveredOver) return;
+
+		switch (HoverHandler.button)
+		{
+			case (short)PointerEventData.InputButton.Left:
+				callbackL?.Invoke(pos);
+				break;
+			case (short)PointerEventData.InputButton.Right:
+				callbackR?.Invoke(pos);
+				break;
+			case (short)PointerEventData.InputButton.Middle:
+				callbackM?.Invoke(pos);
+				break;
+		}
+		if (hoveredOver == -1)
+			HoverHandler.liftMouse += UndoBinding;
+
+		hoveredOver = HoverHandler.button;
+	}
+
+	public void UndoBinding()
+	{
+		hoveredOver = -1;
+		HoverHandler.liftMouse -= UndoBinding;
+	}
+
+	public void Hide()
 	{
 		flag.gameObject.SetActive(false);
 		tile.gameObject.SetActive(true);
-		tile.color = Color.white;
+		rect.sizeDelta = visuals.tileSize;
 
-		if (hasValue && useFlags)
+		if (hasValue && visuals.useFlags)
 			hint.valueChanged -= UpdateText;
 		
 		text.text = "";
 		hasValue = false;
 	}
 
-	public void Reveal(bool useFlags)
+	public void Reveal()
 	{
-		tile.gameObject.SetActive(false);
-
-		if (hint.flagValue < 0)	return;
-
-		int hintVal = useFlags ? hint.displayValue : hint.actualValue;
-
-		// if already revealed, check what we need to update
-		if (hasValue)
+		if (!hasValue)
 		{
-			if (useFlags)
-				hint.valueChanged += UpdateText;
-			else
-				hint.valueChanged -= UpdateText;
-			
-			if ((hintVal == 0 && text.text == "") || hintVal.ToString() == text.text)	return;
+			tile.gameObject.SetActive(false);
+			rect.sizeDelta = Vector2.zero;
 		}
 
-		string hintText = hint.actualValue < 0 ? "" : hintVal.ToString();
+		if (hint.actualValue < 0)	return;
 
-		if (useFlags)
-		{
-			if (!hasValue)
-				hint.valueChanged += UpdateText;
-			
-			if (hint.actualValue == 0)
-				hintText = "";
-		}
+		if (visuals.useFlags)
+			hint.valueChanged += UpdateText;
 		else
-		{
-			if (hintVal == 0)
-				hintText = "";
-		}
+			hint.valueChanged -= UpdateText;
 
-		text.text = hintText;
+		int hintVal =  visuals.useFlags ? hint.displayValue : hint.actualValue;
+		text.text = (hintVal != 0 || (visuals.useFlags && hint.actualValue != 0)) ? hintVal.ToString() : "";
 		hasValue = true;
 	}
 
 	void UpdateText()
 	{
-		string hintText = hint.actualValue < 0 ? "X" : hint.displayValue.ToString();
-		if (hint.actualValue == 0 && hint.displayValue == 0)
-			hintText = "";
-		text.text = hintText;
+		text.text = (hint.actualValue == 0 && hint.displayValue == 0) ? "" : hint.displayValue.ToString();
 	}
 
 	public void SetFlag(Sprite flagImg)
@@ -83,18 +103,5 @@ public class Tile : MonoBehaviour, IPointerClickHandler
 			flag.gameObject.SetActive(false);
 			
 		flag.sprite = flagImg;
-	}
-
-	public void OnPointerClick(PointerEventData eventData)
-	{
-		switch (eventData.button)
-		{
-			case PointerEventData.InputButton.Left:
-				callbackL?.Invoke(pos);
-				break;
-			case PointerEventData.InputButton.Right:
-				callbackR?.Invoke(pos);
-				break;
-		}
 	}
 }

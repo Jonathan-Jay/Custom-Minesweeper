@@ -32,10 +32,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1993806388871283833}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 2, y: 2}
+  m_SizeDelta: {x: 42, y: 42}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2480351818873012883
 CanvasRenderer:
@@ -127,12 +127,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pos: {x: 0, y: 0}
-  flag: {fileID: 3529818557919143354}
-  tile: {fileID: 2171885152899835725}
-  text: {fileID: 114117939610547713}
   hint:
     actualValue: 0
     flagValue: 0
+  visuals: {fileID: 0}
+  flag: {fileID: 3529818557919143354}
+  tile: {fileID: 2171885152899835725}
+  text: {fileID: 114117939610547713}
   hasValue: 0
 --- !u!1 &5240517940769847588
 GameObject:
@@ -166,10 +167,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1993806388871283833}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -4, y: -4}
+  m_SizeDelta: {x: 36, y: 36}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6961413669714546999
 CanvasRenderer:
@@ -241,10 +242,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1993806388871283833}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 40, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7269416938896783428
 CanvasRenderer:

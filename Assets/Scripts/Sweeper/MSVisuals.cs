@@ -12,7 +12,8 @@ public class MSVisuals : MonoBehaviour
 	NodeGrid<Tile> board;
 	Minesweeper game;
 
-	bool useFlags = false;
+	public bool useFlags {get; private set;} = false;
+	public Vector2 tileSize {get; private set;} = Vector2.zero;
 
 	void Awake()
 	{
@@ -26,9 +27,10 @@ public class MSVisuals : MonoBehaviour
 
 	void Start()
 	{
-		Vector2 tileSize = tileTemplate.GetComponent<RectTransform>().sizeDelta;
-		
+		tileSize = tileTemplate.GetComponent<RectTransform>().sizeDelta;
 		Vector2 offset = new Vector2((game.size.x * -0.5f + 0.5f) * tileSize.x, (game.size.y * -0.5f + 0.5f) * tileSize.y);
+		
+		boardParent.sizeDelta = tileSize * game.size;
 
 		Vector2Int pos = Vector2Int.zero;
 		for (pos.x = 0; pos.x < game.size.x; ++pos.x)
@@ -39,10 +41,12 @@ public class MSVisuals : MonoBehaviour
 				tile.GetComponent<RectTransform>().anchoredPosition = offset + new Vector2(pos.x * tileSize.x, pos.y * tileSize.y);
 				tile.pos = pos;
 				tile.hint = game.GetHint(pos);
+				tile.visuals = this;
 
 				board.SetCell(pos, tile);
-				tile.callbackL += game.Click;
-				tile.callbackR += game.Flag;
+				tile.callbackL = game.Click;
+				tile.callbackR = game.Flag;
+				tile.callbackM = game.ClearFlag;
 			}
 		}
 
@@ -75,7 +79,7 @@ public class MSVisuals : MonoBehaviour
 		{
 			foreach (Tile tile in board.linearGrid)
 			{
-				tile.Hide(useFlags);
+				tile.Hide();
 			}
 		}
 
@@ -104,7 +108,7 @@ public class MSVisuals : MonoBehaviour
 	void Reveal(Vector2Int pos)
 	{
 		Tile tile = board.GetCell(pos);
-		tile.Reveal(useFlags);
+		tile.Reveal();
 		DoText();
 	}
 

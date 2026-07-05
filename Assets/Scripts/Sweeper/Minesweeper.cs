@@ -26,6 +26,7 @@ public class Minesweeper : MonoBehaviour
 	NodeGrid<bool> visibleGrid;
 	public event Action<Vector2Int> visibilityChanged;
 	public event Action<Vector2Int> flagChanged;
+	public event Action<Bomb> mistakeMade;
 	public event Action winEvent;
 	Dictionary<Vector2Int, Bomb> bombList = new Dictionary<Vector2Int, Bomb>();
 
@@ -52,7 +53,7 @@ public class Minesweeper : MonoBehaviour
 			if (!bombList.ContainsKey(pos))
 				if (--tileCount <= 0)
 				{
-					winTime = Time.time;
+					winTime = time;
 					winEvent?.Invoke();
 				}
 		};
@@ -147,10 +148,12 @@ public class Minesweeper : MonoBehaviour
 
 			//guaranteed flags are marked with negative values
 			hint.flagValue = hint.actualValue;
-			bombOptions[-hint.actualValue].flagCount += 1;
-			bombOptions[-hint.actualValue].bomb.UpdateHints(pos, hintGrid, true, -1);
-
+			BombPair bomb = bombOptions[-hint.actualValue];
+			bomb.flagCount += 1;
+			bomb.bomb.UpdateHints(pos, hintGrid, true, -1);
 			flagChanged?.Invoke(pos);
+
+			mistakeMade?.Invoke(bomb.bomb);
 			return;
 		}
 
@@ -184,23 +187,33 @@ public class Minesweeper : MonoBehaviour
 
 	public void Flag(Vector2Int pos)
 	{
-		if ((visibleGrid.GetCell(pos) && !bombList.ContainsKey(pos)) || waitingForClick)	return;
-		
+		SetFlag(pos, (hintGrid.GetCell(pos).flagValue + 1) % bombOptions.Count);
+	}
+
+	public void ClearFlag(Vector2Int pos)
+	{
+		SetFlag(pos, 0);
+	}
+
+	public void SetFlag(Vector2Int pos, int index)
+	{
+		if ((visibleGrid.GetCell(pos) && !bombList.ContainsKey(pos)) || waitingForClick) return;
+
 		Hint hint = hintGrid.GetCell(pos);
-		if (hint.flagValue < 0)	return;
+		if (hint.flagValue < 0) return;
 
 		if (hint.flagValue != 0)
 		{
 			bombOptions[hint.flagValue].flagCount -= 1;
 			bombOptions[hint.flagValue].bomb.UpdateHints(pos, hintGrid, true, 1);
 		}
-		hint.flagValue = (hint.flagValue + 1) % bombOptions.Count;
+		hint.flagValue = index;
 		if (hint.flagValue != 0)
 		{
 			bombOptions[hint.flagValue].flagCount += 1;
 			bombOptions[hint.flagValue].bomb.UpdateHints(pos, hintGrid, true, -1);
 		}
-		
+
 		flagChanged?.Invoke(pos);
 	}
 
