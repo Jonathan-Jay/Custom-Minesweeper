@@ -321,6 +321,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 56c3ff46bcad70b4b8fe4894f79ca73c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  hover: {fileID: 768138000}
   tileTemplate: {fileID: 142934740906912347, guid: 6318d289f1a197e4489746261d0c72c6, type: 3}
   boardParent: {fileID: 768137999}
   text: {fileID: 722131261}
@@ -1052,6 +1053,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bc492c01a7b343498ad29c958beb5f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HoverHandler
+  held: {fileID: 0}
+  button: -1
 --- !u!1 &773118416
 GameObject:
   m_ObjectHideFlags: 0

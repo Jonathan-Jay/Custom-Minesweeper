@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class Tile : MonoBehaviour, IPointerEnterHandler
@@ -19,7 +18,6 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 	
 	public bool hasValue = false;
 	short hoveredOver = -1;
-
 	RectTransform rect;
 
 	void Awake()
@@ -29,11 +27,13 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 	
 	public void OnPointerEnter(PointerEventData eventData)
 	{
-		HoverHandler.held = this;
+		//if (eventData == null && visuals.noHold)	return;
 
-		if (HoverHandler.button == hoveredOver) return;
+		visuals.hover.held = this;
 
-		switch (HoverHandler.button)
+		if (visuals.hover.button == hoveredOver) return;
+
+		switch (visuals.hover.button)
 		{
 			case (short)PointerEventData.InputButton.Left:
 				callbackL?.Invoke(pos);
@@ -45,16 +45,17 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 				callbackM?.Invoke(pos);
 				break;
 		}
+		//if (visuals.noHold && hoveredOver == -1)
 		if (hoveredOver == -1)
-			HoverHandler.liftMouse += UndoBinding;
+			visuals.hover.liftMouse += UndoBinding;
 
-		hoveredOver = HoverHandler.button;
+		hoveredOver = visuals.hover.button;
 	}
 
 	public void UndoBinding()
 	{
 		hoveredOver = -1;
-		HoverHandler.liftMouse -= UndoBinding;
+		visuals.hover.liftMouse -= UndoBinding;
 	}
 
 	public void Hide()

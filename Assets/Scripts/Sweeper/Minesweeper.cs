@@ -8,13 +8,13 @@ using Random = System.Random;
 
 public class Minesweeper : MonoBehaviour
 {
-	[Serializable] public class BombPair
+	[Serializable]
+	public class BombPair
 	{
 		public Bomb bomb;
 		public int count;
 
-		[NonSerialized]
-		public int flagCount = 0;
+		[NonSerialized] public int flagCount = 0;
 	}
 
 	public int seed;
@@ -24,22 +24,22 @@ public class Minesweeper : MonoBehaviour
 	public List<BombPair> bombOptions;
 	NodeGrid<Hint> hintGrid;
 	NodeGrid<bool> visibleGrid;
+
 	public event Action<Vector2Int> visibilityChanged;
 	public event Action<Vector2Int> flagChanged;
 	public event Action<Bomb> mistakeMade;
 	public event Action winEvent;
 	Dictionary<Vector2Int, Bomb> bombList = new Dictionary<Vector2Int, Bomb>();
 
-	public bool waitingForClick {get => firstClick == -Vector2Int.one; private set => waitingForClick = value;}
 	public Vector2Int firstClick {get; private set;} = -Vector2Int.one;
+	public bool waitingForClick {get => firstClick == -Vector2Int.one; private set => waitingForClick = value;}
 	private float winTime = 0f;
 	public float time {get => winTime >= 0f ? winTime : Time.time + winTime; private set => winTime = -value;}
 	public int tileCount {get; private set;} = 0;
 	public int mistakes {get; private set;} = 0;
 	//public int bombCount {get; private set;} = 0;
 
-	[NonSerialized]
-	Random random = new Random();
+	[NonSerialized] Random random = new Random();
 	//Random.State heldState;
 
 	void Awake()
@@ -73,9 +73,7 @@ public class Minesweeper : MonoBehaviour
 		{
 			Array.Clear(visibleGrid.linearGrid, 0, size.x * size.y);
 			foreach (Hint hint in hintGrid.linearGrid)
-			{
 				hint.Reset();
-			}
 		}
 
 		int bombCount = 0;
@@ -135,7 +133,8 @@ public class Minesweeper : MonoBehaviour
 			time = Time.time;
 		}
 
-		if (visibleGrid.GetCell(pos) || hintGrid.GetCell(pos).flagValue > 0)	return;
+		if (visibleGrid.GetCell(pos) || hintGrid.GetCell(pos).flagValue > 0)
+			return;
 
 		//Deal with spread, just check for neighbouring unchecked
 		visibleGrid.SetCell(pos, true);
@@ -172,8 +171,8 @@ public class Minesweeper : MonoBehaviour
 			{
 				for (offset.y = Mathf.Max(0, cur.y - 1); offset.y < Mathf.Min(size.y, cur.y + 2); ++offset.y)
 				{
-					if (offset == cur || visibleGrid.GetCell(offset)
-							|| hintGrid.GetCell(offset).flagValue > 0 || bombList.ContainsKey(offset))	continue;
+					if (offset == cur || visibleGrid.GetCell(offset) || hintGrid.GetCell(offset).flagValue > 0 || bombList.ContainsKey(offset))
+						continue;
 
 					visibleGrid.SetCell(offset, true);
 					visibilityChanged?.Invoke(offset);

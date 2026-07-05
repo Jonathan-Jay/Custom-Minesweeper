@@ -4,9 +4,9 @@ using UnityEngine.EventSystems;
 
 public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
 {
-	public static Tile held;
-	public static short button = -1;
-	public static event Action liftMouse;
+	[NonSerialized] public Tile held;
+	[NonSerialized] public short button = -1;
+	public event Action liftMouse;
 
 	public void OnPointerDown(PointerEventData eventData)
 	{

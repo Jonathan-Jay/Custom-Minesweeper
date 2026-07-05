@@ -1,8 +1,8 @@
-using System.Collections;
 using UnityEngine;
 
 public class MSVisuals : MonoBehaviour
 {
+	public HoverHandler hover;
 	[SerializeField] Tile tileTemplate;
 	[SerializeField] RectTransform boardParent;
 	[SerializeField] TMPro.TMP_Text text;
