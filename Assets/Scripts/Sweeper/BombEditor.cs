@@ -57,7 +57,7 @@ public class BombEditor : Editor
 							hintGrid.DeleteArrayElementAtIndex((size.y - y + 1) * size.x - x);
 					}
 				}
-				dir = (newSize.x - size.x);
+				dir = newSize.x - size.x;
 				for (int y = 0; y < newSize.y; ++y)
 				{
 					for (int x = 0; x < Mathf.Abs(dir); ++x)

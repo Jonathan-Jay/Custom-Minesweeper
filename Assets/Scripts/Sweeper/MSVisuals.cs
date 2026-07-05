@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class MSVisuals : MonoBehaviour
 {
@@ -68,6 +67,8 @@ public class MSVisuals : MonoBehaviour
 
 	public void SetupGame(bool newSeed)
 	{
+		//Random.State heldState = Random.state;
+
 		winText.gameObject.SetActive(false);
 
 		if (!game.waitingForClick)
@@ -85,6 +86,8 @@ public class MSVisuals : MonoBehaviour
 		seedText.text = "Seed: " + game.seed;
 
 		DoText();
+
+		//Random.state = heldState;
 	}
 
 	public void ToggleFlags()

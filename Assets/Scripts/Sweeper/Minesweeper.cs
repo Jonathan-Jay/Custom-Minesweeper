@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
-using Random = UnityEngine.Random;
+//using Random = UnityEngine.Random;
+using Random = System.Random;
 
 public class Minesweeper : MonoBehaviour
 {
@@ -37,6 +37,10 @@ public class Minesweeper : MonoBehaviour
 	public int mistakes {get; private set;} = 0;
 	//public int bombCount {get; private set;} = 0;
 
+	[NonSerialized]
+	Random random = new Random();
+	//Random.State heldState;
+
 	void Awake()
 	{
 		hintGrid = new NodeGrid<Hint>(size, true);
@@ -57,8 +61,10 @@ public class Minesweeper : MonoBehaviour
 	public void Generate()
 	{
 		if (seed == 0)
-			seed = Random.Range(int.MinValue, int.MaxValue);
-		Random.InitState(seed);
+			seed = random.Next();
+			//seed = Random.Range(int.MinValue, int.MaxValue);
+		random = new Random(seed);
+		//Random.InitState(seed);
 
 		bombList.Clear();
 
@@ -87,6 +93,7 @@ public class Minesweeper : MonoBehaviour
 		}
 		tileCount = size.x * size.y - bombCount;
 
+		//heldState = Random.state;
 		firstClick = -Vector2Int.one;
 		time = 0f;
 		mistakes = 0;
@@ -97,6 +104,7 @@ public class Minesweeper : MonoBehaviour
 		// create the game field, while ensuring no bombs are around the click point
 		if (waitingForClick)
 		{
+			//Random.state = heldState;
 			Vector2Int minBound = pos - Vector2Int.one * (initialIslandRadius - 1);
 			Vector2Int maxBound = pos + Vector2Int.one * (initialIslandRadius - 1);
 
@@ -117,8 +125,9 @@ public class Minesweeper : MonoBehaviour
 			
 			foreach (Vector2Int bombPos in bombList.Keys)
 			{
-				hintGrid.GetCell(bombPos).actualValue = -1;
-				hintGrid.GetCell(bombPos).displayValue = -1;
+				Hint hint = hintGrid.GetCell(bombPos);
+				hint.actualValue = -GetBombIndex(bombPos);
+				hint.displayValue = hint.actualValue;
 			}
 
 			firstClick = pos;
@@ -134,19 +143,12 @@ public class Minesweeper : MonoBehaviour
 		if (bombList.ContainsKey(pos))
 		{
 			mistakes += 1;
-			Bomb bomb = bombList[pos];
 			Hint hint = hintGrid.GetCell(pos);
-			int index = 1;
-			for (;index < bombOptions.Count; ++index)
-			{
-				if (bombOptions[index].bomb == bomb)
-					break;
-			}
 
 			//guaranteed flags are marked with negative values
-			hint.flagValue = -index;
-			bombOptions[index].flagCount += 1;
-			bombOptions[index].bomb.UpdateHints(pos, hintGrid, true, -1);
+			hint.flagValue = hint.actualValue;
+			bombOptions[-hint.actualValue].flagCount += 1;
+			bombOptions[-hint.actualValue].bomb.UpdateHints(pos, hintGrid, true, -1);
 
 			flagChanged?.Invoke(pos);
 			return;
@@ -207,6 +209,18 @@ public class Minesweeper : MonoBehaviour
 		return hintGrid.GetCell(pos);
 	}
 
+	public int GetBombIndex(Vector2Int bombPos)
+	{
+		Bomb bomb;
+		if (bombList.TryGetValue(bombPos, out bomb))
+		{
+			for (int i = 1; i < bombOptions.Count; ++i)
+				if (bombOptions[i].bomb == bomb)
+					return i;
+		}
+		return 0;
+	}
+
 	public Sprite GetFlag(Vector2Int pos)
 	{
 		return bombOptions[Mathf.Abs(hintGrid.GetCell(pos).flagValue)]?.bomb.sprite;
@@ -244,6 +258,7 @@ public class Minesweeper : MonoBehaviour
 	// To allow custom bomb spawn conditions
 	Vector2Int GetPos(Bomb bomb)
 	{
-		return new Vector2Int(Random.Range(0, size.x), Random.Range(0, size.y));
+		//return new Vector2Int(Random.Range(0, size.x), Random.Range(0, size.y));
+		return new Vector2Int(random.Next(0, size.x), random.Next(0, size.y));
 	}
 }
