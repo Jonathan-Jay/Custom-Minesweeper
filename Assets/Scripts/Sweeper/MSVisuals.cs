@@ -94,9 +94,11 @@ public class MSVisuals : MonoBehaviour
 		//Random.state = heldState;
 	}
 
-	public void ToggleFlags()
+	public void ToggleFlags(bool option)
 	{
-		useFlags = !useFlags;
+		if (useFlags == option)	return;
+		
+		useFlags = option;
 		foreach (Tile tile in board.linearGrid)
 		{
 			if (tile.hasValue)
@@ -120,7 +122,7 @@ public class MSVisuals : MonoBehaviour
 
 	void DoText()
 	{
-		text.text = (useFlags ? "Flag hints: On - Tiles remaining: " : "Flag hints: Off - Tiles remaining: ") + game.tileCount;
+		text.text = "Tiles remaining: " + game.tileCount;
 		foreach (var bombPair in game.bombOptions)
 		{
 			if (bombPair == null)	continue;
