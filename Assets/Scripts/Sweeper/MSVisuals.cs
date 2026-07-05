@@ -125,7 +125,7 @@ public class MSVisuals : MonoBehaviour
 		{
 			if (bombPair == null)	continue;
 			
-			text.text += " - " + bombPair.bomb.name + ": " + bombPair.flagCount + "/" + bombPair.count;
+			text.text += " - <sprite=\"" + bombPair.bomb.sprite.name + "\" index=0>: " + bombPair.flagCount + "/" + bombPair.count;
 		}
 
 		text.text += " - Mistakes: " + game.mistakes;
