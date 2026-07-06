@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -39,6 +40,10 @@ public class Minesweeper : MonoBehaviour
 	public int mistakes {get; private set;} = 0;
 	//public int bombCount {get; private set;} = 0;
 
+	public bool animating {get; private set;} = false;
+	public bool animated = false;
+	public void SetAnimated(bool val) => animated = val;
+
 	[NonSerialized] Random random = new Random();
 	//Random.State heldState;
 
@@ -70,11 +75,10 @@ public class Minesweeper : MonoBehaviour
 		bombList.Clear();
 
 		if (!waitingForClick)
-		{
 			Array.Clear(visibleGrid.linearGrid, 0, size.x * size.y);
-			foreach (Hint hint in hintGrid.linearGrid)
-				hint.Reset();
-		}
+		
+		foreach (Hint hint in hintGrid.linearGrid)
+			hint.Reset();
 
 		int bombCount = 0;
 		foreach (BombPair bombPair in bombOptions)
@@ -100,6 +104,9 @@ public class Minesweeper : MonoBehaviour
 
 	public void Click(Vector2Int pos)
 	{
+		if (animating)
+			return;
+		
 		// create the game field, while ensuring no bombs are around the click point
 		if (waitingForClick)
 		{
@@ -121,13 +128,6 @@ public class Minesweeper : MonoBehaviour
 					AddBomb(bomb, newPos);
 				}
 			}
-			
-			foreach (Vector2Int bombPos in bombList.Keys)
-			{
-				Hint hint = hintGrid.GetCell(bombPos);
-				hint.actualValue = -GetBombIndex(bombPos);
-				hint.displayValue = hint.actualValue;
-			}
 
 			firstClick = pos;
 			time = Time.time;
@@ -146,8 +146,8 @@ public class Minesweeper : MonoBehaviour
 			Hint hint = hintGrid.GetCell(pos);
 
 			//guaranteed flags are marked with negative values
-			hint.flagValue = hint.actualValue;
-			BombPair bomb = bombOptions[-hint.actualValue];
+			hint.flagValue = -hint.bomb;
+			BombPair bomb = bombOptions[hint.bomb];
 			bomb.flagCount += 1;
 			bomb.bomb.UpdateHints(pos, hintGrid, true, -1);
 			flagChanged?.Invoke(pos);
@@ -158,12 +158,24 @@ public class Minesweeper : MonoBehaviour
 
 		if (hintGrid.GetCell(pos).actualValue != 0)
 			return;
+		
+		StartCoroutine(BreakChainCoroutine(pos));
+	}
+
+	WaitForFixedUpdate wffu = new WaitForFixedUpdate();
+
+	IEnumerator BreakChainCoroutine(Vector2Int pos)
+	{
+		animating = true;
 
 		Stack<Vector2Int> scanPoses = new Stack<Vector2Int>();
 		scanPoses.Push(pos);
 		
 		while (scanPoses.Count != 0)
 		{
+			if (animated)
+				yield return wffu;
+
 			Vector2Int cur = scanPoses.Pop();
 			//Try to add the 8 surround cells to the stack
 			Vector2Int offset = Vector2Int.zero;
@@ -182,6 +194,8 @@ public class Minesweeper : MonoBehaviour
 				}
 			}
 		}
+
+		animating = false;
 	}
 
 	public void Flag(Vector2Int pos)
@@ -221,15 +235,11 @@ public class Minesweeper : MonoBehaviour
 		return hintGrid.GetCell(pos);
 	}
 
-	public int GetBombIndex(Vector2Int bombPos)
+	public int GetBombIndex(Bomb bomb)
 	{
-		Bomb bomb;
-		if (bombList.TryGetValue(bombPos, out bomb))
-		{
-			for (int i = 1; i < bombOptions.Count; ++i)
-				if (bombOptions[i].bomb == bomb)
-					return i;
-		}
+		for (int i = 1; i < bombOptions.Count; ++i)
+			if (bombOptions[i].bomb == bomb)
+				return i;
 		return 0;
 	}
 
@@ -248,8 +258,9 @@ public class Minesweeper : MonoBehaviour
 		if (bombList.ContainsKey(pos))
 			return false;
 
-		bomb.UpdateHints(pos, hintGrid, false, 1);
+		GetHint(pos).bomb = GetBombIndex(bomb);
 
+		bomb.UpdateHints(pos, hintGrid, false, 1);
 		bombList.Add(pos, bomb);
 
 		return true;
@@ -260,8 +271,9 @@ public class Minesweeper : MonoBehaviour
 		if (!bombList.ContainsKey(pos))
 			return false;
 
-		bombList[pos].UpdateHints(pos, hintGrid, false, -1);
+		GetHint(pos).bomb = 0;
 
+		bombList[pos].UpdateHints(pos, hintGrid, false, -1);
 		bombList.Remove(pos);
 
 		return true;

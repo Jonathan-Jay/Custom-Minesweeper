@@ -9,17 +9,6 @@ public class Bomb : ScriptableObject, INode
 	[SerializeField] Vector2Int hintSize = new Vector2Int(3, 3);
 	[SerializeField] int[] hintGrid = {1, 1, 1, 1, 0, 1, 1, 1, 1};
 
-	//returns negative
-	public int GetRelativeHint(Vector2Int relativePos)
-	{
-		relativePos -= offset;
-		if (relativePos.x >= 0 && relativePos.x < hintSize.x && relativePos.y >= 0 && relativePos.y < hintSize.y)
-		{
-			return hintGrid[relativePos.x + hintSize.x * relativePos.y];
-		}
-		return 0;
-	}
-
 	public void UpdateHints(Vector2Int bombPos, NodeGrid<Hint> gameHintGrid, bool flag, int multiplier)
 	{
 		bombPos -= offset;

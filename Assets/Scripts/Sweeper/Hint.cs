@@ -15,6 +15,7 @@ public class Hint : INode
 	public int actualValue;
 	//Use negative values for found mines
 	public int flagValue = 0;
+	public int bomb = 0;
 	public event Action valueChanged;
 
 	public void UpdateValue(int value, bool flag)
@@ -30,5 +31,6 @@ public class Hint : INode
 		actualValue = 0;
 		_displayValue = 0;
 		flagValue = 0;
+		bomb = 0;
 	}
 }

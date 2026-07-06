@@ -12,6 +12,8 @@ public class MSVisuals : MonoBehaviour
 	NodeGrid<Tile> board;
 	Minesweeper game;
 
+	public Color[] hintColours = { Color.grey };
+	public bool NoHintsOverBombs {get; private set;} = true;
 	public bool useFlags {get; private set;} = false;
 	public Vector2 tileSize {get; private set;} = Vector2.zero;
 
@@ -20,7 +22,10 @@ public class MSVisuals : MonoBehaviour
 		game = GetComponent<Minesweeper>();
 		game.visibilityChanged += Reveal;
 		game.flagChanged += UpdateFlag;
-		game.winEvent += () => winText.gameObject.SetActive(true);
+		game.winEvent += () => {
+			winText.gameObject.SetActive(true);
+			hover.enabled = false;
+		};
 
 		board = new NodeGrid<Tile>(game.size);
 	}
@@ -60,7 +65,7 @@ public class MSVisuals : MonoBehaviour
 
 	public void SetupGameSameBreak()
 	{
-		if (game.waitingForClick)	return;
+		if (game.waitingForClick || game.animating)	return;
 
 		Vector2Int pos = game.firstClick;
 
@@ -71,6 +76,8 @@ public class MSVisuals : MonoBehaviour
 
 	public void SetupGame(bool newSeed)
 	{
+		if (game.animating) return;
+
 		//Random.State heldState = Random.state;
 
 		winText.gameObject.SetActive(false);
@@ -89,9 +96,23 @@ public class MSVisuals : MonoBehaviour
 
 		seedText.text = "Seed: " + game.seed;
 
+		hover.enabled = true;
 		DoText();
 
 		//Random.state = heldState;
+	}
+
+	public void ToggleHintOverBombs(bool option)
+	{
+		if (NoHintsOverBombs == !option)	return;
+
+		NoHintsOverBombs = !option;
+		foreach (Tile tile in board.linearGrid)
+		{
+			//for any flags in general
+			if (tile.hint.flagValue != 0)
+				tile.FlagText(NoHintsOverBombs);
+		}
 	}
 
 	public void ToggleFlags(bool option)
@@ -103,6 +124,8 @@ public class MSVisuals : MonoBehaviour
 		{
 			if (tile.hasValue)
 				Reveal(tile.pos);
+			else if (tile.hint.flagValue != 0)
+				tile.FlagText();
 		}
 		DoText();
 	}

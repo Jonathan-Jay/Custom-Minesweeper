@@ -11,8 +11,7 @@ public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 	public void OnPointerDown(PointerEventData eventData)
 	{
 		button = (short)eventData.button;
-		if (held)
-			held.OnPointerEnter(eventData);
+		held?.OnPointerEnter(eventData);
 	}
 
 	public void OnPointerUp(PointerEventData eventData)
@@ -27,5 +26,12 @@ public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 	public void OnPointerExit(PointerEventData eventData)
 	{
 		held = null;
+	}
+
+	void OnDisable()
+	{
+		liftMouse?.Invoke();
+		held = null;
+		button = -1;
 	}
 }

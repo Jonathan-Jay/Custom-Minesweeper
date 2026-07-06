@@ -63,8 +63,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 		flag.gameObject.SetActive(false);
 		tile.gameObject.SetActive(true);
 		rect.sizeDelta = visuals.tileSize;
-
-		if (hasValue && visuals.useFlags)
+		if ((hasValue || (!visuals.NoHintsOverBombs && hint.flagValue != 0)) && visuals.useFlags)
 			hint.valueChanged -= UpdateText;
 		
 		text.text = "";
@@ -79,30 +78,73 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 			rect.sizeDelta = Vector2.zero;
 		}
 
-		if (hint.actualValue < 0)	return;
+		if (hint.bomb != 0 || hint.flagValue != 0)	return;
 
 		if (visuals.useFlags)
 			hint.valueChanged += UpdateText;
 		else
 			hint.valueChanged -= UpdateText;
 
-		int hintVal =  visuals.useFlags ? hint.displayValue : hint.actualValue;
-		text.text = (hintVal != 0 || (visuals.useFlags && hint.actualValue != 0)) ? hintVal.ToString() : "";
+		SetText(visuals.useFlags ? hint.displayValue : hint.actualValue, hint.actualValue == 0);
 		hasValue = true;
+	}
+
+	public void FlagText(bool remove = false)
+	{
+		if (visuals.NoHintsOverBombs)
+		{
+			if (visuals.useFlags)
+				hint.valueChanged -= UpdateText;
+
+			text.text = "";
+			return;
+		}
+		
+		if (visuals.useFlags)
+			hint.valueChanged += UpdateText;
+		else
+			hint.valueChanged -= UpdateText;
+		
+		SetText(visuals.useFlags ? hint.displayValue : hint.actualValue, false);
+
 	}
 
 	void UpdateText()
 	{
-		text.text = (hint.actualValue == 0 && hint.displayValue == 0) ? "" : hint.displayValue.ToString();
+		SetText(hint.displayValue, hint.actualValue == 0 && hint.displayValue == 0);
+	}
+
+	void SetText(int val, bool empty)
+	{
+		if (empty)
+		{
+			text.text = "";
+			return;
+		}
+		text.color = visuals.hintColours[Mathf.Min(Mathf.Abs(val), visuals.hintColours.Length - 1)];
+		text.text = val.ToString();
 	}
 
 	public void SetFlag(Sprite flagImg)
 	{
 		if (flagImg)
+		{
+			if (!visuals.NoHintsOverBombs && !flag.gameObject.activeInHierarchy)
+				FlagText();
+
 			flag.gameObject.SetActive(true);
+		}
 		else
+		{
+			if (!visuals.NoHintsOverBombs)
+			{
+				if (visuals.useFlags)
+					hint.valueChanged -= UpdateText;
+				text.text = "";
+			}
 			flag.gameObject.SetActive(false);
-			
+		}
+		
 		flag.sprite = flagImg;
 	}
 }
