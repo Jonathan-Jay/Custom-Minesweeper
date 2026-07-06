@@ -6,6 +6,9 @@ public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 {
 	[NonSerialized] public Tile held;
 	[NonSerialized] public short button = -1;
+	public Action<Vector2Int> callbackL;
+	public Action<Vector2Int> callbackR;
+	public Action<Vector2Int> callbackM;
 	public event Action liftMouse;
 
 	public void OnPointerDown(PointerEventData eventData)

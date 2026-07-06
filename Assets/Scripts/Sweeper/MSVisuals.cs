@@ -13,6 +13,7 @@ public class MSVisuals : MonoBehaviour
 	Minesweeper game;
 
 	public Color[] hintColours = { Color.grey };
+	public Color mysteryColour = Color.mediumPurple;
 	public bool NoHintsOverBombs {get; private set;} = true;
 	public bool useFlags {get; private set;} = false;
 	public Vector2 tileSize {get; private set;} = Vector2.zero;
@@ -49,11 +50,12 @@ public class MSVisuals : MonoBehaviour
 				tile.visuals = this;
 
 				board.SetCell(pos, tile);
-				tile.callbackL = game.Click;
-				tile.callbackR = game.Flag;
-				tile.callbackM = game.ClearFlag;
 			}
 		}
+
+		hover.callbackL = game.Click;
+		hover.callbackR = game.Flag;
+		hover.callbackM = game.ClearFlag;
 
 		SetupGame(false);
 	}
@@ -111,7 +113,7 @@ public class MSVisuals : MonoBehaviour
 		{
 			//for any flags in general
 			if (tile.hint.flagValue != 0)
-				tile.FlagText(NoHintsOverBombs);
+				tile.FlagText(true);
 		}
 	}
 
@@ -122,10 +124,11 @@ public class MSVisuals : MonoBehaviour
 		useFlags = option;
 		foreach (Tile tile in board.linearGrid)
 		{
-			if (tile.hasValue)
-				Reveal(tile.pos);
-			else if (tile.hint.flagValue != 0)
+			if (!NoHintsOverBombs && tile.hint.flagValue != 0)
 				tile.FlagText();
+			else if (tile.hasValue)
+				Reveal(tile.pos);
+			
 		}
 		DoText();
 	}

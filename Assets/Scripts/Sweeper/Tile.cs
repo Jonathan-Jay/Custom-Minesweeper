@@ -6,9 +6,6 @@ using UnityEngine.UI;
 public class Tile : MonoBehaviour, IPointerEnterHandler
 {
 	public Vector2Int pos;
-	public Action<Vector2Int> callbackL;
-	public Action<Vector2Int> callbackR;
-	public Action<Vector2Int> callbackM;
 	public Hint hint;
 	public MSVisuals visuals;
 
@@ -36,13 +33,13 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 		switch (visuals.hover.button)
 		{
 			case (short)PointerEventData.InputButton.Left:
-				callbackL?.Invoke(pos);
+				visuals.hover.callbackL?.Invoke(pos);
 				break;
 			case (short)PointerEventData.InputButton.Right:
-				callbackR?.Invoke(pos);
+				visuals.hover.callbackR?.Invoke(pos);
 				break;
 			case (short)PointerEventData.InputButton.Middle:
-				callbackM?.Invoke(pos);
+				visuals.hover.callbackM?.Invoke(pos);
 				break;
 		}
 		//if (visuals.noHold && hoveredOver == -1)
@@ -63,7 +60,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 		flag.gameObject.SetActive(false);
 		tile.gameObject.SetActive(true);
 		rect.sizeDelta = visuals.tileSize;
-		if ((hasValue || (!visuals.NoHintsOverBombs && hint.flagValue != 0)) && visuals.useFlags)
+		if (hasValue || (!visuals.NoHintsOverBombs && hint.flagValue != 0))
 			hint.valueChanged -= UpdateText;
 		
 		text.text = "";
@@ -80,49 +77,54 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 
 		if (hint.bomb != 0 || hint.flagValue != 0)	return;
 
-		if (visuals.useFlags)
+		if (!hasValue)
 			hint.valueChanged += UpdateText;
-		else
-			hint.valueChanged -= UpdateText;
 
-		SetText(visuals.useFlags ? hint.displayValue : hint.actualValue, hint.actualValue == 0);
+		UpdateText();
 		hasValue = true;
 	}
 
-	public void FlagText(bool remove = false)
+	public void FlagText(bool toggle = false)
 	{
 		if (visuals.NoHintsOverBombs)
 		{
-			if (visuals.useFlags)
-				hint.valueChanged -= UpdateText;
+			hint.valueChanged -= UpdateText;
 
 			text.text = "";
 			return;
 		}
 		
-		if (visuals.useFlags)
+		if (toggle)
 			hint.valueChanged += UpdateText;
-		else
-			hint.valueChanged -= UpdateText;
 		
-		SetText(visuals.useFlags ? hint.displayValue : hint.actualValue, false);
+		SetText(visuals.useFlags ? hint.displayValue : hint.actualValue);
 
 	}
 
 	void UpdateText()
 	{
-		SetText(hint.displayValue, hint.actualValue == 0 && hint.displayValue == 0);
+		SetText(visuals.useFlags ? hint.displayValue : hint.actualValue);
 	}
 
-	void SetText(int val, bool empty)
+	void SetText(int val)
 	{
-		if (empty)
+		if (hint.status == Hint.TileStatus.Mystery || hint.status == Hint.TileStatus.Closed)
+		{
+			text.color = visuals.mysteryColour;
+			text.text = "?";
+			return;
+		}
+		
+		if (hint.actualValue == 0 && !(visuals.useFlags && hint.displayValue != 0) && hint.flagValue == 0)
 		{
 			text.text = "";
 			return;
 		}
+		string newText = val.ToString();
+		if (text.text == newText)
+			return;
 		text.color = visuals.hintColours[Mathf.Min(Mathf.Abs(val), visuals.hintColours.Length - 1)];
-		text.text = val.ToString();
+		text.text = newText;
 	}
 
 	public void SetFlag(Sprite flagImg)
@@ -130,7 +132,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 		if (flagImg)
 		{
 			if (!visuals.NoHintsOverBombs && !flag.gameObject.activeInHierarchy)
-				FlagText();
+				FlagText(true);
 
 			flag.gameObject.SetActive(true);
 		}
@@ -138,8 +140,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 		{
 			if (!visuals.NoHintsOverBombs)
 			{
-				if (visuals.useFlags)
-					hint.valueChanged -= UpdateText;
+				hint.valueChanged -= UpdateText;
 				text.text = "";
 			}
 			flag.gameObject.SetActive(false);

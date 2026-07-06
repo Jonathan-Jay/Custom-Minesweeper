@@ -136,14 +136,16 @@ public class Minesweeper : MonoBehaviour
 		if (visibleGrid.GetCell(pos) || hintGrid.GetCell(pos).flagValue > 0)
 			return;
 
-		//Deal with spread, just check for neighbouring unchecked
+		Hint hint = hintGrid.GetCell(pos);
+
+		//Must be visible
 		visibleGrid.SetCell(pos, true);
+		hint.SetStatus(Hint.TileStatus.Open);
 		visibilityChanged?.Invoke(pos);
 
 		if (bombList.ContainsKey(pos))
 		{
 			mistakes += 1;
-			Hint hint = hintGrid.GetCell(pos);
 
 			//guaranteed flags are marked with negative values
 			hint.flagValue = -hint.bomb;
@@ -153,44 +155,51 @@ public class Minesweeper : MonoBehaviour
 			flagChanged?.Invoke(pos);
 
 			mistakeMade?.Invoke(bomb.bomb);
-			return;
 		}
-
-		if (hintGrid.GetCell(pos).actualValue != 0)
-			return;
 		
-		StartCoroutine(BreakChainCoroutine(pos));
+		StartCoroutine(BreakChainCoroutine(pos, hint.actualValue != 0 || hint.flagValue < 0));
 	}
 
 	WaitForFixedUpdate wffu = new WaitForFixedUpdate();
 
-	IEnumerator BreakChainCoroutine(Vector2Int pos)
+	IEnumerator BreakChainCoroutine(Vector2Int pos, bool noSpread)
 	{
 		animating = true;
 
-		Stack<Vector2Int> scanPoses = new Stack<Vector2Int>();
-		scanPoses.Push(pos);
+		Stack<Tuple<Vector2Int, bool>> scanPoses = new Stack<Tuple<Vector2Int, bool>>();
+		scanPoses.Push(new Tuple<Vector2Int, bool>(pos, noSpread));
 		
 		while (scanPoses.Count != 0)
 		{
-			if (animated)
+			Tuple<Vector2Int, bool> cur = scanPoses.Pop();
+			
+			if (animated && !cur.Item2)
 				yield return wffu;
 
-			Vector2Int cur = scanPoses.Pop();
 			//Try to add the 8 surround cells to the stack
 			Vector2Int offset = Vector2Int.zero;
-			for (offset.x = Mathf.Max(0, cur.x - 1); offset.x < Mathf.Min(size.x, cur.x + 2); ++offset.x)
+			for (offset.x = Mathf.Max(0, cur.Item1.x - 1); offset.x < Mathf.Min(size.x, cur.Item1.x + 2); ++offset.x)
 			{
-				for (offset.y = Mathf.Max(0, cur.y - 1); offset.y < Mathf.Min(size.y, cur.y + 2); ++offset.y)
+				for (offset.y = Mathf.Max(0, cur.Item1.y - 1); offset.y < Mathf.Min(size.y, cur.Item1.y + 2); ++offset.y)
 				{
-					if (offset == cur || visibleGrid.GetCell(offset) || hintGrid.GetCell(offset).flagValue > 0 || bombList.ContainsKey(offset))
+					if (offset == cur.Item1 || visibleGrid.GetCell(offset))
+						continue;
+					
+					Hint hint = hintGrid.GetCell(offset);
+					if (offset.x == cur.Item1.x || offset.y == cur.Item1.y)
+						hint.SetStatus(Hint.TileStatus.Neighbouring, true);
+					
+					if (cur.Item2)
+						continue;
+
+					if (hint.flagValue > 0 || bombList.ContainsKey(offset))
 						continue;
 
 					visibleGrid.SetCell(offset, true);
+					hint.SetStatus(Hint.TileStatus.Open);
 					visibilityChanged?.Invoke(offset);
-					
-					if (hintGrid.GetCell(offset).actualValue == 0)
-						scanPoses.Push(offset);
+
+					scanPoses.Push(new Tuple<Vector2Int, bool>(offset, hint.actualValue != 0));
 				}
 			}
 		}

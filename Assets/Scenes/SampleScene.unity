@@ -339,6 +339,7 @@ MonoBehaviour:
   - {r: 0.54379576, g: 0.3075471, b: 1, a: 1}
   - {r: 0.44934028, g: 0.13396227, b: 1, a: 1}
   - {r: 1, g: 1, b: 1, a: 1}
+  mysteryColour: {r: 0.5764706, g: 0.4392157, b: 0.8588236, a: 1}
 --- !u!1 &393733517
 GameObject:
   m_ObjectHideFlags: 0
@@ -1025,7 +1026,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Chain Animation
+  m_text: Animated Break
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
