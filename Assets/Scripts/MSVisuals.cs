@@ -2,15 +2,15 @@ using UnityEngine;
 
 public class MSVisuals : MonoBehaviour
 {
-	public HoverHandler hover;
 	[SerializeField] Tile tileTemplate;
-	[SerializeField] RectTransform boardParent;
+	[HideInInspector] public RectTransform boardParent;
 	[SerializeField] TMPro.TMP_Text text;
 	[SerializeField] TMPro.TMP_Text timeText;
 	[SerializeField] TMPro.TMP_Text winText;
-	[SerializeField] TMPro.TMP_Text seedText;
+	[SerializeField] TMPro.TMP_InputField seedText;
 	NodeGrid<Tile> board;
-	Minesweeper game;
+	public HoverHandler hover;
+	public Minesweeper game { get; private set; }
 
 	public Color[] hintColours = { Color.grey };
 	public Color mysteryColour = Color.mediumPurple;
@@ -65,6 +65,18 @@ public class MSVisuals : MonoBehaviour
 		timeText.text = "Time: " + game.time.ToString("0.00");
 	}
 
+	public void SetSeed(string value)
+	{
+		int res;
+		if (int.TryParse(value, out res))
+		{
+			game.seed = res;
+			seedText.text += " Reset Same Seed";
+			return;
+		}
+		seedText.text = game.seed.ToString();
+	}
+
 	public void SetupGameSameBreak()
 	{
 		if (game.waitingForClick || game.animating)	return;
@@ -96,7 +108,7 @@ public class MSVisuals : MonoBehaviour
 			game.seed = 0;
 		game.Generate();
 
-		seedText.text = "Seed: " + game.seed;
+		seedText.text = game.seed.ToString();
 
 		hover.enabled = true;
 		DoText();

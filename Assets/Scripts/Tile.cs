@@ -15,15 +15,18 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 	
 	public bool hasValue = false;
 	short hoveredOver = -1;
+	/* To reduce number of Enter callbacks
 	RectTransform rect;
 
 	void Awake()
 	{
 		rect = GetComponent<RectTransform>();
 	}
+	//*/
 	
 	public void OnPointerEnter(PointerEventData eventData)
 	{
+		if (visuals.game.animating)	return;
 		//if (eventData == null && visuals.noHold)	return;
 
 		visuals.hover.held = this;
@@ -59,7 +62,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 	{
 		flag.gameObject.SetActive(false);
 		tile.gameObject.SetActive(true);
-		rect.sizeDelta = visuals.tileSize;
+		//rect.sizeDelta = visuals.tileSize;
 		if (hasValue || (!visuals.NoHintsOverBombs && hint.flagValue != 0))
 			hint.valueChanged -= UpdateText;
 		
@@ -67,12 +70,19 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 		hasValue = false;
 	}
 
+	public void QuickBreak()
+	{
+		if (!hasValue)	return;
+
+		visuals.game.BigClick(pos);
+	}
+
 	public void Reveal()
 	{
 		if (!hasValue)
 		{
 			tile.gameObject.SetActive(false);
-			rect.sizeDelta = Vector2.zero;
+			//rect.sizeDelta = Vector2.zero;
 		}
 
 		if (hint.bomb != 0 || hint.flagValue != 0)	return;

@@ -13,6 +13,13 @@ public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
 	public void OnPointerDown(PointerEventData eventData)
 	{
+		if (eventData.button == PointerEventData.InputButton.Left && (button == 1 || button == 420))
+		{
+			//quick reveal number
+			button = 420;
+			held?.QuickBreak();
+			return;
+		}
 		button = (short)eventData.button;
 		held?.OnPointerEnter(eventData);
 	}

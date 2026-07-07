@@ -35,7 +35,7 @@ public class Minesweeper : MonoBehaviour
 	public Vector2Int firstClick {get; private set;} = -Vector2Int.one;
 	public bool waitingForClick {get => firstClick == -Vector2Int.one; private set => waitingForClick = value;}
 	private float winTime = 0f;
-	public float time {get => winTime >= 0f ? winTime : Time.time + winTime; private set => winTime = -value;}
+	public float time {get => winTime >= 0f ? winTime : Time.unscaledTime + winTime; private set => winTime = -value;}
 	public int tileCount {get; private set;} = 0;
 	public int mistakes {get; private set;} = 0;
 	//public int bombCount {get; private set;} = 0;
@@ -49,10 +49,11 @@ public class Minesweeper : MonoBehaviour
 
 	void Awake()
 	{
+		bombOptions.Insert(0, null);
+		
 		hintGrid = new NodeGrid<Hint>(size, true);
 		visibleGrid = new NodeGrid<bool>(size);
 
-		bombOptions.Insert(0, null);
 
 		visibilityChanged += (Vector2Int pos) => {
 			if (!bombList.ContainsKey(pos))
@@ -62,6 +63,30 @@ public class Minesweeper : MonoBehaviour
 					winEvent?.Invoke();
 				}
 		};
+	}
+
+	// Also resets some data
+	public void SetSize(Vector2Int newSize)
+	{
+		if (animating)	return;
+
+		size = newSize;
+
+		hintGrid = new NodeGrid<Hint>(size, true);
+		visibleGrid = new NodeGrid<bool>(size);
+		bombList.Clear();
+		
+		foreach (BombPair bombPair in bombOptions)
+		{
+			if (bombPair == null) continue;
+			bombPair.flagCount = 0;
+		}
+
+		firstClick = -Vector2Int.one;
+		tileCount = size.x * size.y;
+		mistakes = 0;
+		time = 0;
+		waitingForClick = true;
 	}
 
 	public void Generate()
@@ -130,7 +155,7 @@ public class Minesweeper : MonoBehaviour
 			}
 
 			firstClick = pos;
-			time = Time.time;
+			time = Time.unscaledTime;
 		}
 
 		if (visibleGrid.GetCell(pos) || hintGrid.GetCell(pos).flagValue > 0)
@@ -139,6 +164,42 @@ public class Minesweeper : MonoBehaviour
 		Hint hint = hintGrid.GetCell(pos);
 
 		//Must be visible
+		OpenCell(pos, hint);
+
+		Stack<Tuple<Vector2Int, bool>> scanPoses = new Stack<Tuple<Vector2Int, bool>>();
+		scanPoses.Push(new Tuple<Vector2Int, bool>(pos, hint.actualValue != 0 || hint.flagValue < 0));
+
+		StartCoroutine(BreakChainCoroutine(pos, scanPoses));
+	}
+
+	public void BigClick(Vector2Int pos)
+	{
+		if (animating || waitingForClick)
+			return;
+
+		Stack<Tuple<Vector2Int, bool>> scanPoses = new Stack<Tuple<Vector2Int, bool>>();
+		Vector2Int offset = Vector2Int.zero;
+		for (offset.x = Mathf.Max(0, pos.x - 1); offset.x < Mathf.Min(size.x, pos.x + 2); ++offset.x)
+		{
+			for (offset.y = Mathf.Max(0, pos.y - 1); offset.y < Mathf.Min(size.y, pos.y + 2); ++offset.y)
+			{
+				Hint hint = hintGrid.GetCell(offset);
+
+				if (offset == pos || visibleGrid.GetCell(offset) || hint.flagValue > 0)
+					continue;
+
+				OpenCell(offset, hint);
+
+				scanPoses.Push(new Tuple<Vector2Int, bool>(offset, hint.actualValue != 0 || hint.flagValue < 0));
+			}
+		}
+
+		StartCoroutine(BreakChainCoroutine(pos, scanPoses));
+	}
+
+	void OpenCell(Vector2Int pos, Hint hint)
+	{
+
 		visibleGrid.SetCell(pos, true);
 		hint.SetStatus(Hint.TileStatus.Open);
 		visibilityChanged?.Invoke(pos);
@@ -156,18 +217,13 @@ public class Minesweeper : MonoBehaviour
 
 			mistakeMade?.Invoke(bomb.bomb);
 		}
-		
-		StartCoroutine(BreakChainCoroutine(pos, hint.actualValue != 0 || hint.flagValue < 0));
 	}
 
 	WaitForFixedUpdate wffu = new WaitForFixedUpdate();
 
-	IEnumerator BreakChainCoroutine(Vector2Int pos, bool noSpread)
+	IEnumerator BreakChainCoroutine(Vector2Int pos, Stack<Tuple<Vector2Int, bool>> scanPoses)
 	{
 		animating = true;
-
-		Stack<Tuple<Vector2Int, bool>> scanPoses = new Stack<Tuple<Vector2Int, bool>>();
-		scanPoses.Push(new Tuple<Vector2Int, bool>(pos, noSpread));
 		
 		while (scanPoses.Count != 0)
 		{
