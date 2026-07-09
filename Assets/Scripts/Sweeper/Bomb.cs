@@ -4,7 +4,8 @@ using UnityEngine;
 public class Bomb : ScriptableObject, INode
 {
 	public Sprite sprite;
-	public Vector2Int offset = new Vector2Int(1, 1);
+	public int damage = 1;
+	[SerializeField] Vector2Int offset = new Vector2Int(1, 1);
 	
 	[SerializeField] Vector2Int hintSize = new Vector2Int(3, 3);
 	[SerializeField] int[] hintGrid = {1, 1, 1, 1, 0, 1, 1, 1, 1};

@@ -7,6 +7,14 @@ public class MSCustomizer : MonoBehaviour
 	public MSVisuals visuals;
 	public MSMover mover;
 
+	[SerializeField] TMPro.TMP_InputField maxHealthField;
+	[SerializeField] TMPro.TMP_InputField seedText;
+
+	void Awake()
+	{
+		visuals.seedUpdated += (int val) => seedText.text = val.ToString();
+	}
+
 	void Start()
 	{
 		// Lots of stupid code just to not require changing script execution order
@@ -27,6 +35,9 @@ public class MSCustomizer : MonoBehaviour
 
 			for (int child = 0; child < transform.childCount; ++child)
 				transform.GetChild(0).gameObject.SetActive(true);
+
+			// Other setters
+			SetMaxHealth(visuals.maxMistakes.ToString());
 		}
 
 		StartCoroutine(DelayedStart());
@@ -44,5 +55,24 @@ public class MSCustomizer : MonoBehaviour
 
 		gameObject.SetActive(false);
 		mover.deactivated = false;
+	}
+
+	public void SetMaxHealth(string value)
+	{
+		if (int.TryParse(value, out int res))
+			visuals.SetMaxMistakes(res);
+		
+		maxHealthField.text = visuals.maxMistakes.ToString();
+	}
+
+	public void SetSeed(string value)
+	{
+		if (int.TryParse(value, out int res))
+		{
+			visuals.game.seed = res;
+			seedText.text += " Reset Same Seed";
+			return;
+		}
+		seedText.text = visuals.game.seed.ToString();
 	}
 }

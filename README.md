@@ -2,3 +2,5 @@ A minesweeper template that allows for multiple bomb types, dynamic flags (with 
 Also bombs are edited in scriptable objects in the inspector, how fun!
 
 inspired by https://hempuli.itch.io/cavern-sweeper
+
+Github pages build can be found here:https://jonathan-jay.github.io/Custom-Minesweeper/

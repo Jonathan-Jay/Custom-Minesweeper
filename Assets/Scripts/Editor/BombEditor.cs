@@ -8,6 +8,7 @@ public class BombEditor : Editor
 	SerializedProperty hintSize;
 	SerializedProperty offsetProp;
 	SerializedProperty spriteProp;
+	SerializedProperty damageProp;
 	Vector2Int size;
 	Vector2Int offset;
 
@@ -17,6 +18,7 @@ public class BombEditor : Editor
 		hintSize = this.serializedObject.FindProperty("hintSize");
 		offsetProp = this.serializedObject.FindProperty("offset");
 		spriteProp = this.serializedObject.FindProperty("sprite");
+		damageProp = this.serializedObject.FindProperty("damage");
 		size = hintSize.vector2IntValue;
 	}
 
@@ -30,6 +32,9 @@ public class BombEditor : Editor
 		GUIStyle cellStyle = new GUIStyle(GUI.skin.textField) {alignment = TextAnchor.MiddleCenter};
 
 		EditorGUILayout.PropertyField(spriteProp);
+		EditorGUILayout.PropertyField(damageProp);
+		EditorGUILayout.Space();
+
 		EditorGUILayout.PropertyField(offsetProp);
 		offset = offsetProp.vector2IntValue;
 		EditorGUILayout.PropertyField(hintSize);

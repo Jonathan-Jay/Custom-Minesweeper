@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class MSVisuals : MonoBehaviour
@@ -6,14 +7,17 @@ public class MSVisuals : MonoBehaviour
 	[HideInInspector] public RectTransform boardParent;
 	[SerializeField] TMPro.TMP_Text text;
 	[SerializeField] TMPro.TMP_Text timeText;
-	[SerializeField] TMPro.TMP_Text winText;
-	[SerializeField] TMPro.TMP_InputField seedText;
+	[SerializeField] RectTransform winRect;
+	[SerializeField] RectTransform loseRect;
 	NodeGrid<Tile> board;
+	public Action<int> seedUpdated;
 	public HoverHandler hover;
 	public Minesweeper game { get; private set; }
 
 	public Color[] hintColours = { Color.grey };
 	public Color mysteryColour = Color.mediumPurple;
+	public int mistakes {get; private set;} = 0;
+	public int maxMistakes {get; private set;} = 1;
 	public bool NoHintsOverBombs {get; private set;} = true;
 	public bool useFlags {get; private set;} = false;
 	public Vector2 tileSize {get; private set;} = Vector2.zero;
@@ -24,9 +28,10 @@ public class MSVisuals : MonoBehaviour
 		game.visibilityChanged += Reveal;
 		game.flagChanged += UpdateFlag;
 		game.winEvent += () => {
-			winText.gameObject.SetActive(true);
+			winRect.gameObject.SetActive(true);
 			hover.enabled = false;
 		};
+		game.mistakeMade += CheckMistake;
 
 		board = new NodeGrid<Tile>(game.size);
 	}
@@ -57,6 +62,8 @@ public class MSVisuals : MonoBehaviour
 		hover.callbackR = game.Flag;
 		hover.callbackM = game.ClearFlag;
 
+		maxMistakes = 3;
+
 		SetupGame(false);
 	}
 
@@ -65,16 +72,29 @@ public class MSVisuals : MonoBehaviour
 		timeText.text = "Time: " + game.time.ToString("0.00");
 	}
 
-	public void SetSeed(string value)
+	public void SetMaxMistakes(int value)
 	{
-		int res;
-		if (int.TryParse(value, out res))
+		int max = 0;
+		foreach (Minesweeper.BombPair bombPair in game.bombOptions)
 		{
-			game.seed = res;
-			seedText.text += " Reset Same Seed";
-			return;
+			if (bombPair?.bomb == null) continue;
+			max += bombPair.count * bombPair.bomb.damage;
 		}
-		seedText.text = game.seed.ToString();
+
+		maxMistakes = Mathf.Min(Mathf.Max(value, 1), Mathf.Max(max, 1));
+		DoText();
+	}
+
+	void CheckMistake(Bomb bomb)
+	{
+		mistakes += bomb.damage;
+		if (mistakes >= maxMistakes)
+		{
+			loseRect.gameObject.SetActive(true);
+			hover.enabled = false;
+			game.time = -game.time;
+		}
+		DoText();
 	}
 
 	public void SetupGameSameBreak()
@@ -94,22 +114,21 @@ public class MSVisuals : MonoBehaviour
 
 		//Random.State heldState = Random.state;
 
-		winText.gameObject.SetActive(false);
+		winRect.gameObject.SetActive(false);
+		loseRect.gameObject.SetActive(false);
 
 		if (!game.waitingForClick)
 		{
 			foreach (Tile tile in board.linearGrid)
-			{
 				tile.Hide();
-			}
 		}
 
 		if (newSeed)
 			game.seed = 0;
 		game.Generate();
-
-		seedText.text = game.seed.ToString();
-
+		seedUpdated?.Invoke(game.seed);
+		
+		mistakes = 0;
 		hover.enabled = true;
 		DoText();
 
@@ -140,7 +159,6 @@ public class MSVisuals : MonoBehaviour
 				tile.FlagText();
 			else if (tile.hasValue)
 				Reveal(tile.pos);
-			
 		}
 		DoText();
 	}
@@ -163,11 +181,11 @@ public class MSVisuals : MonoBehaviour
 		text.text = "Tiles remaining: " + game.tileCount;
 		foreach (var bombPair in game.bombOptions)
 		{
-			if (bombPair == null)	continue;
+			if (bombPair?.bomb == null)	continue;
 			
 			text.text += " - <sprite=\"" + bombPair.bomb.sprite.name + "\" index=0>: " + bombPair.flagCount + "/" + bombPair.count;
 		}
 
-		text.text += " - Mistakes: " + game.mistakes;
+		text.text += " - HP: " + (maxMistakes - mistakes) + "/" + maxMistakes;
 	}
 }
