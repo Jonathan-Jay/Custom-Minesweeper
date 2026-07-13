@@ -4,12 +4,12 @@ using UnityEngine.InputSystem;
 
 public class MSMover : MonoBehaviour
 {
-	[SerializeField] RectTransform zoomRect;
+	[SerializeField] public RectTransform zoomRect;
 	[SerializeField] float zoomSpeed = 1f;
 	[SerializeField] Vector2 zoomBounds = new Vector2(0.5f, 5f);
 	[SerializeField] RectTransform moveRect;
 	[SerializeField] float moveSpeed = 150f;
-	[NonSerialized] public Vector2 movementBounds = Vector2.zero;
+	public Vector2 movementBounds = Vector2.zero;
 
 	public bool _deactivated;
 	public bool deactivated {get => _deactivated; set
@@ -18,7 +18,7 @@ public class MSMover : MonoBehaviour
 			enabled = false;
 		}
 	}
-	float zoom;
+	public float zoom {get; private set;}
 	Vector2 direction;
 	//RectTransform rect;
 
@@ -59,11 +59,21 @@ public class MSMover : MonoBehaviour
 		moveRect.anchoredPosition = Vector2.zero;
 	}
 
-	void Update()
+	public void Move(Vector2 amount)
 	{
 		moveRect.anchoredPosition = new Vector2(
-			Mathf.Clamp(moveRect.anchoredPosition.x + direction.x * moveSpeed * Time.deltaTime, -movementBounds.x ,movementBounds.x),
-			Mathf.Clamp(moveRect.anchoredPosition.y + direction.y * moveSpeed * Time.deltaTime, -movementBounds.y ,movementBounds.y)
+			Mathf.Clamp(moveRect.anchoredPosition.x + amount.x, -movementBounds.x, movementBounds.x),
+			Mathf.Clamp(moveRect.anchoredPosition.y + amount.y, -movementBounds.y, movementBounds.y)
 		);
+	}
+
+	public float GetZoomFactor()
+	{
+		return zoomRect.localScale.x;
+	}
+
+	void Update()
+	{
+		Move(direction * (moveSpeed / (zoom * 0.9f + 0.1f) * Time.deltaTime));
 	}
 }

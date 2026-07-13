@@ -41,10 +41,11 @@ public class Minesweeper : MonoBehaviour
 	public int mistakes {get; private set;} = 0;
 	//public int bombCount {get; private set;} = 0;
 
+	public bool chordsValidateFlags = true;
 	public bool animating {get; private set;} = false;
 	public bool animated = false;
 	public void SetAnimated(bool val) => animated = val;
-	public bool randomBreak;
+	public bool randomBreak = false;
 
 	[NonSerialized] Random random = new Random();
 	//Random.State heldState;
@@ -176,7 +177,7 @@ public class Minesweeper : MonoBehaviour
 
 	public void BigClick(Vector2Int pos)
 	{
-		if (animating || waitingForClick)
+		if (animating || waitingForClick || (chordsValidateFlags && hintGrid.GetCell(pos).displayValue != 0))
 			return;
 
 		Queue<Tuple<Vector2Int, bool>> scanPoses = new Queue<Tuple<Vector2Int, bool>>();
@@ -284,11 +285,6 @@ public class Minesweeper : MonoBehaviour
 		animating = false;
 	}
 
-	public void Flag(Vector2Int pos)
-	{
-		SetFlag(pos, (hintGrid.GetCell(pos).flagValue + 1) % bombOptions.Count);
-	}
-
 	public void ClearFlag(Vector2Int pos)
 	{
 		SetFlag(pos, 0);
@@ -331,7 +327,7 @@ public class Minesweeper : MonoBehaviour
 
 	public Sprite GetFlag(Vector2Int pos)
 	{
-		return bombOptions[Mathf.Abs(hintGrid.GetCell(pos).flagValue)]?.bomb.sprite;
+		return bombOptions[Mathf.Abs(hintGrid.GetCell(pos).flagValue)]?.bomb?.sprite;
 	}
 
 	bool InBounds(Vector2Int pos, Vector2Int minBounds, Vector2Int maxBounds)

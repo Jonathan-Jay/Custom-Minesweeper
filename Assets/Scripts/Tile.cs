@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Tile : MonoBehaviour, IPointerEnterHandler
+public class Tile : MonoBehaviour, IPointerEnterHandler//, IPointerExitHandler
 {
 	public Vector2Int pos;
 	public Hint hint;
@@ -14,7 +14,6 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 	[SerializeField] TMPro.TMP_Text text;
 	
 	public bool hasValue = false;
-	short hoveredOver = -1;
 	/* To reduce number of Enter callbacks
 	RectTransform rect;
 
@@ -26,12 +25,17 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 	
 	public void OnPointerEnter(PointerEventData eventData)
 	{
-		if (visuals.game.animating)	return;
-		//if (eventData == null && visuals.noHold)	return;
-
+		visuals.tileFlagged = false;
 		visuals.hover.held = this;
+	}
 
-		if (visuals.hover.button == hoveredOver) return;
+	/*public void OnPointerExit(PointerEventData eventData)
+	{
+	}*/
+
+	public void ProcessInput()
+	{
+		if (visuals.game.animating) return;
 
 		switch (visuals.hover.button)
 		{
@@ -45,17 +49,6 @@ public class Tile : MonoBehaviour, IPointerEnterHandler
 				visuals.hover.callbackM?.Invoke(pos);
 				break;
 		}
-		//if (visuals.noHold && hoveredOver == -1)
-		if (hoveredOver == -1)
-			visuals.hover.liftMouse += UndoBinding;
-
-		hoveredOver = visuals.hover.button;
-	}
-
-	public void UndoBinding()
-	{
-		hoveredOver = -1;
-		visuals.hover.liftMouse -= UndoBinding;
 	}
 
 	public void Hide()

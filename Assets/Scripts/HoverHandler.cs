@@ -1,18 +1,23 @@
 using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
+public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler, IDragHandler
 {
+	[SerializeField] CanvasScaler scaler;
+	[SerializeField] MSMover mover;
 	[NonSerialized] public Tile held;
 	[NonSerialized] public short button = -1;
+	[NonSerialized] public Tile lastHeld;
 	public Action<Vector2Int> callbackL;
 	public Action<Vector2Int> callbackR;
 	public Action<Vector2Int> callbackM;
-	public event Action liftMouse;
 
 	public void OnPointerDown(PointerEventData eventData)
 	{
+		lastHeld = held;
+
 		if (eventData.button == PointerEventData.InputButton.Left && (button == 1 || button == 420))
 		{
 			//quick reveal number
@@ -21,16 +26,18 @@ public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 			return;
 		}
 		button = (short)eventData.button;
-		held?.OnPointerEnter(eventData);
 	}
 
 	public void OnPointerUp(PointerEventData eventData)
 	{
 		if ((short)eventData.button == button)
 		{
-			liftMouse?.Invoke();
+			if (lastHeld == held)
+				held?.ProcessInput();
 			button = -1;
 		}
+		else if (button == 420)
+			button = -1;
 	}
 
 	public void OnPointerExit(PointerEventData eventData)
@@ -40,8 +47,14 @@ public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
 	void OnDisable()
 	{
-		liftMouse?.Invoke();
 		held = null;
 		button = -1;
+	}
+
+	public void OnDrag(PointerEventData eventData)
+	{
+		if (button != 1)	return;
+
+		mover.Move(eventData.delta * (scaler.scaleFactor / mover.GetZoomFactor()));
 	}
 }

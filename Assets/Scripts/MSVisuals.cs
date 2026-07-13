@@ -4,7 +4,7 @@ using UnityEngine;
 public class MSVisuals : MonoBehaviour
 {
 	[SerializeField] Tile tileTemplate;
-	[HideInInspector] public RectTransform boardParent;
+	public RectTransform boardParent;
 	[SerializeField] TMPro.TMP_Text text;
 	[SerializeField] TMPro.TMP_Text timeText;
 	[SerializeField] RectTransform winRect;
@@ -21,6 +21,9 @@ public class MSVisuals : MonoBehaviour
 	public bool NoHintsOverBombs {get; private set;} = true;
 	public bool useFlags {get; private set;} = false;
 	public Vector2 tileSize {get; private set;} = Vector2.zero;
+
+	[NonSerialized] public bool tileFlagged = true;
+	public int defaultFlag { get; private set;}= 0;
 
 	void Awake()
 	{
@@ -59,7 +62,7 @@ public class MSVisuals : MonoBehaviour
 		}
 
 		hover.callbackL = game.Click;
-		hover.callbackR = game.Flag;
+		hover.callbackR = SetFlag;
 		hover.callbackM = game.ClearFlag;
 
 		maxMistakes = 3;
@@ -135,6 +138,22 @@ public class MSVisuals : MonoBehaviour
 		//Random.state = heldState;
 	}
 
+	public void SetDefaultFlag(int val)
+	{
+		defaultFlag = Mathf.Clamp(val, 0, game.bombOptions.Count - 1);
+		DoText();
+	}
+
+	public void SetFlag(Vector2Int pos)
+	{
+		int value = defaultFlag;
+		Tile tile = board.GetCell(pos);
+		if (tileFlagged || value == 0 || value == tile.hint.flagValue)
+			value = (tile.hint.flagValue + 1) % game.bombOptions.Count;
+		tileFlagged = true;
+		game.SetFlag(pos, value);
+	}
+
 	public void ToggleHintOverBombs(bool option)
 	{
 		if (NoHintsOverBombs == !option)	return;
@@ -179,13 +198,18 @@ public class MSVisuals : MonoBehaviour
 	void DoText()
 	{
 		text.text = "Tiles remaining: " + game.tileCount;
+		
+		Bomb bomb = game.bombOptions[defaultFlag]?.bomb;
+		if (bomb)
+			text.text += " - Flag with ><sprite=\"" + bomb.sprite.name + "\" index=0><";
+
+		text.text += " - HP: " + (maxMistakes - mistakes) + "/" + maxMistakes;
+
 		foreach (var bombPair in game.bombOptions)
 		{
 			if (bombPair?.bomb == null)	continue;
 			
 			text.text += " - <sprite=\"" + bombPair.bomb.sprite.name + "\" index=0>: " + bombPair.flagCount + "/" + bombPair.count;
 		}
-
-		text.text += " - HP: " + (maxMistakes - mistakes) + "/" + maxMistakes;
 	}
 }
