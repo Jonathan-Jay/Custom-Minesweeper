@@ -65,7 +65,8 @@ public class Tile : MonoBehaviour, IPointerEnterHandler//, IPointerExitHandler
 
 	public void QuickBreak()
 	{
-		if (!hasValue)	return;
+		//if (!hasValue)	return;
+		if (text.text == "" || text.text == "?")	return;
 
 		visuals.game.BigClick(pos);
 	}

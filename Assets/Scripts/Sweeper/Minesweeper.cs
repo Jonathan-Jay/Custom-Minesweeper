@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 //using Random = UnityEngine.Random;
@@ -14,7 +15,8 @@ public class Minesweeper : MonoBehaviour
 	public class BombPair
 	{
 		public Bomb bomb;
-		public int count;
+		public int count = 0;
+		[NonSerialized] public int realCount = -1;
 
 		[NonSerialized] public int flagCount = 0;
 	}
@@ -34,14 +36,15 @@ public class Minesweeper : MonoBehaviour
 	Dictionary<Vector2Int, Bomb> bombList = new Dictionary<Vector2Int, Bomb>();
 
 	public Vector2Int firstClick {get; private set;} = -Vector2Int.one;
-	public bool waitingForClick {get => firstClick == -Vector2Int.one; private set => waitingForClick = value;}
+	public bool waitingForClick {get => firstClick == -Vector2Int.one; private set {if (value) firstClick = -Vector2Int.one;}}
 	private float winTime = 0f;
 	public float time {get => winTime >= 0f ? winTime : Time.unscaledTime + winTime; set => winTime = -value;}
 	public int tileCount {get; private set;} = 0;
 	public int mistakes {get; private set;} = 0;
-	//public int bombCount {get; private set;} = 0;
+	public int bombCount {get; private set;} = 0;
 
 	public bool chordsValidateFlags = true;
+	public void SetChords(bool val) => chordsValidateFlags = val;
 	public bool animating {get; private set;} = false;
 	public bool animated = false;
 	public void SetAnimated(bool val) => animated = val;
@@ -52,11 +55,17 @@ public class Minesweeper : MonoBehaviour
 
 	void Awake()
 	{
+		foreach (BombPair bombPair in bombOptions)
+		{
+			if (bombPair?.bomb == null) continue;
+			bombPair.realCount = bombPair.count;
+		}
 		bombOptions.Insert(0, null);
 		
-		hintGrid = new NodeGrid<Hint>(size, true);
-		visibleGrid = new NodeGrid<bool>(size);
-
+		SetRadius(initialIslandRadius);
+		Vector2Int newSize = size;
+		size = Vector2Int.zero;
+		SetSize(newSize);
 
 		visibilityChanged += (Vector2Int pos) => {
 			if (!bombList.ContainsKey(pos))
@@ -68,28 +77,50 @@ public class Minesweeper : MonoBehaviour
 		};
 	}
 
-	// Also resets some data
+	public void DeValidate()
+	{
+		waitingForClick = true;
+		bombCount = 0;
+	}
+
 	public void SetSize(Vector2Int newSize)
 	{
-		if (animating)	return;
+		if (animating || newSize.x < 1 || newSize.y < 1)	return;
 
-		size = newSize;
+		// If changing, reset values
+		if (size != newSize)
+		{
+			size = newSize;
+			hintGrid = new NodeGrid<Hint>(size, true);
+			visibleGrid = new NodeGrid<bool>(size);
+			bombList.Clear();
 
-		hintGrid = new NodeGrid<Hint>(size, true);
-		visibleGrid = new NodeGrid<bool>(size);
-		bombList.Clear();
-		
+			mistakes = 0;
+			time = 0;
+			//firstClick = -Vector2Int.one;
+			waitingForClick = true;
+		}
+		tileCount = size.x * size.y;
+
+		bombCount = 0;
 		foreach (BombPair bombPair in bombOptions)
 		{
 			if (bombPair?.bomb == null) continue;
 			bombPair.flagCount = 0;
+			bombCount += bombPair.realCount;
 		}
 
-		firstClick = -Vector2Int.one;
-		tileCount = size.x * size.y;
-		mistakes = 0;
-		time = 0;
-		waitingForClick = true;
+		SetRadius(initialIslandRadius);
+
+		//precount bombs. We do this often, but it's good for data verification
+		int radius = initialIslandRadius + initialIslandRadius + 1;
+		radius *= radius;
+		bombCount = Mathf.Min(bombCount, tileCount - radius);
+	}
+
+	public void SetRadius(int value)
+	{
+		initialIslandRadius = Mathf.Clamp(value, 0, (Mathf.Min(size.x, size.y) - 1) / 2);
 	}
 
 	public void Generate()
@@ -108,13 +139,26 @@ public class Minesweeper : MonoBehaviour
 		foreach (Hint hint in hintGrid.linearGrid)
 			hint.Reset();
 
-		int bombCount = 0;
+		int radius = initialIslandRadius + initialIslandRadius + 1;
+		radius *= radius;
+		tileCount = size.x * size.y - radius;
+
+		bombCount = 0;
 		foreach (BombPair bombPair in bombOptions)
 		{
 			if (bombPair?.bomb == null)	continue;
 
 			bombPair.flagCount = 0;
+			bombPair.count = bombPair.realCount;
+
 			bombCount += bombPair.count;
+			if (bombCount > tileCount)
+			{
+				bombCount -= bombPair.count;
+				bombPair.count = tileCount - bombCount;
+				bombCount += bombPair.count;
+			}
+
 			for (int c = 0; c < bombPair.count;)
 			{
 				Vector2Int newPos = GetPos(bombPair.bomb);
@@ -122,7 +166,7 @@ public class Minesweeper : MonoBehaviour
 					++c;
 			}
 		}
-		tileCount = size.x * size.y - bombCount;
+		tileCount += radius - bombCount;
 
 		//heldState = Random.state;
 		firstClick = -Vector2Int.one;

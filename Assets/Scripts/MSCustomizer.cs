@@ -7,8 +7,11 @@ public class MSCustomizer : MonoBehaviour
 	public MSVisuals visuals;
 	public MSMover mover;
 
+	[SerializeField] TMPro.TMP_InputField initialRadiusField;
 	[SerializeField] TMPro.TMP_InputField maxHealthField;
 	[SerializeField] TMPro.TMP_InputField seedText;
+
+	Vector2Int tempSize = Vector2Int.zero;
 
 	void Awake()
 	{
@@ -22,7 +25,7 @@ public class MSCustomizer : MonoBehaviour
 		img.enabled = false;
 
 		for (int child = 0; child < transform.childCount; ++child)
-			transform.GetChild(0).gameObject.SetActive(false);
+			transform.GetChild(child).gameObject.SetActive(false);
 
 		IEnumerator DelayedStart() {
 			yield return null;
@@ -31,13 +34,12 @@ public class MSCustomizer : MonoBehaviour
 			img.enabled = true;
 			gameObject.SetActive(false);
 
-			img.enabled = true;
-
 			for (int child = 0; child < transform.childCount; ++child)
-				transform.GetChild(0).gameObject.SetActive(true);
+				transform.GetChild(child).gameObject.SetActive(true);
 
-			// Other setters
-			SetMaxHealth(visuals.maxMistakes.ToString());
+			// Default values
+			initialRadiusField.text = visuals.game.initialIslandRadius.ToString();
+			maxHealthField.text = visuals.maxMistakes.ToString();
 		}
 
 		StartCoroutine(DelayedStart());
@@ -49,12 +51,24 @@ public class MSCustomizer : MonoBehaviour
 		{
 			gameObject.SetActive(true);
 			mover.deactivated = true;
+			visuals.hover.enabled = false;
+			tempSize = visuals.game.size;
 			return;
 		}
-		//ConfirmChanges();
+		
+		visuals.ValidateChanges(tempSize);
 
 		gameObject.SetActive(false);
 		mover.deactivated = false;
+		visuals.hover.enabled = true;
+	}
+
+	public void SetInitialRadius(string value)
+	{
+		if (int.TryParse(value, out int res))
+			visuals.game.SetRadius(res);
+		
+		initialRadiusField.text = visuals.game.initialIslandRadius.ToString();
 	}
 
 	public void SetMaxHealth(string value)

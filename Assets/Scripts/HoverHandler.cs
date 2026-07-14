@@ -3,16 +3,20 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler, IDragHandler
+public class HoverHandler : MonoBehaviour,
+		IPointerDownHandler, IPointerUpHandler, IPointerExitHandler,
+		IDragHandler, IBeginDragHandler, IEndDragHandler
 {
 	[SerializeField] CanvasScaler scaler;
 	[SerializeField] MSMover mover;
 	[NonSerialized] public Tile held;
-	[NonSerialized] public short button = -1;
-	[NonSerialized] public Tile lastHeld;
+	public short button {get; private set;} = -1;
+	public Tile lastHeld {get; private set;}
 	public Action<Vector2Int> callbackL;
 	public Action<Vector2Int> callbackR;
 	public Action<Vector2Int> callbackM;
+
+	Vector2 startPos = Vector2.negativeInfinity;
 
 	public void OnPointerDown(PointerEventData eventData)
 	{
@@ -36,7 +40,7 @@ public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 				held?.ProcessInput();
 			button = -1;
 		}
-		else if (button == 420)
+		else if (eventData.button == PointerEventData.InputButton.Right && button == 420)
 			button = -1;
 	}
 
@@ -53,8 +57,40 @@ public class HoverHandler : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
 
 	public void OnDrag(PointerEventData eventData)
 	{
-		if (button != 1)	return;
+		switch (button)
+		{
+			case (short)PointerEventData.InputButton.Right:
+				mover.Move(eventData.delta * (scaler.scaleFactor / mover.GetZoomFactor()));
+				break;
+			case (short)PointerEventData.InputButton.Middle:
+				break;
+		}
 
-		mover.Move(eventData.delta * (scaler.scaleFactor / mover.GetZoomFactor()));
+	}
+
+	public void OnBeginDrag(PointerEventData eventData)
+	{
+		if (eventData.button == PointerEventData.InputButton.Middle)
+		{
+			startPos = eventData.position;
+		}
+	}
+
+	public void OnEndDrag(PointerEventData eventData)
+	{
+		if (eventData.button == PointerEventData.InputButton.Middle && startPos != eventData.position)
+		{
+			//Select the thing
+			Debug.Log(GetIndex(eventData.position));
+
+			startPos = Vector2.negativeInfinity;
+		}
+	}
+
+	float GetIndex(Vector2 pos)
+	{
+		if (startPos == Vector2.negativeInfinity)	return -1f;
+
+		return 180f - Vector2.SignedAngle(Vector2.down, pos - startPos);
 	}
 }

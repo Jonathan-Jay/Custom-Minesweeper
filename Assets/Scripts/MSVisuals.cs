@@ -3,27 +3,29 @@ using UnityEngine;
 
 public class MSVisuals : MonoBehaviour
 {
+	public HoverHandler hover;
+	public Minesweeper game { get; private set; }
 	[SerializeField] Tile tileTemplate;
 	public RectTransform boardParent;
+	public Color[] hintColours = { Color.grey };
+	public Color mysteryColour = Color.mediumPurple;
+
+	public int mistakes {get; private set;} = 0;
+	public int maxMistakes {get; private set;} = 3;
+	public bool NoHintsOverBombs {get; private set;} = true;
+	public bool useFlags {get; private set;} = false;
+	[NonSerialized] public bool tileFlagged = true;
+	public int defaultFlag { get; private set;}= 0;
+	public Action<int> seedUpdated;
+	public Vector2 tileSize {get; private set;} = Vector2.zero;
+
+	[SerializeField] FlagMenu flagMenu;
 	[SerializeField] TMPro.TMP_Text text;
 	[SerializeField] TMPro.TMP_Text timeText;
 	[SerializeField] RectTransform winRect;
 	[SerializeField] RectTransform loseRect;
+
 	NodeGrid<Tile> board;
-	public Action<int> seedUpdated;
-	public HoverHandler hover;
-	public Minesweeper game { get; private set; }
-
-	public Color[] hintColours = { Color.grey };
-	public Color mysteryColour = Color.mediumPurple;
-	public int mistakes {get; private set;} = 0;
-	public int maxMistakes {get; private set;} = 1;
-	public bool NoHintsOverBombs {get; private set;} = true;
-	public bool useFlags {get; private set;} = false;
-	public Vector2 tileSize {get; private set;} = Vector2.zero;
-
-	[NonSerialized] public bool tileFlagged = true;
-	public int defaultFlag { get; private set;}= 0;
 
 	void Awake()
 	{
@@ -31,7 +33,8 @@ public class MSVisuals : MonoBehaviour
 		game.visibilityChanged += Reveal;
 		game.flagChanged += UpdateFlag;
 		game.winEvent += () => {
-			winRect.gameObject.SetActive(true);
+			if (hover.enabled)
+				winRect.gameObject.SetActive(true);
 			hover.enabled = false;
 		};
 		game.mistakeMade += CheckMistake;
@@ -65,7 +68,8 @@ public class MSVisuals : MonoBehaviour
 		hover.callbackR = SetFlag;
 		hover.callbackM = game.ClearFlag;
 
-		maxMistakes = 3;
+		SetMaxMistakes(maxMistakes);
+		flagMenu.gameObject.SetActive(false);
 
 		SetupGame(false);
 	}
@@ -73,6 +77,23 @@ public class MSVisuals : MonoBehaviour
 	void Update()
 	{
 		timeText.text = "Time: " + game.time.ToString("0.00");
+	}
+
+	public void ValidateChanges(Vector2Int newSize)
+	{
+		int bombCount = game.bombCount;
+		game.SetSize(newSize);
+		if (game.waitingForClick)
+		{
+			int tileCount = game.tileCount - game.bombCount;
+
+			int radius = game.initialIslandRadius + game.initialIslandRadius + 1;
+			radius *= radius;
+
+			// reset if too many bombs or bomb count changed (previously was too many bombs)
+			if ((tileCount < radius) != (bombCount != game.bombCount))
+				SetupGame(false);
+		}
 	}
 
 	public void SetMaxMistakes(int value)
@@ -207,7 +228,7 @@ public class MSVisuals : MonoBehaviour
 
 		foreach (var bombPair in game.bombOptions)
 		{
-			if (bombPair?.bomb == null)	continue;
+			if (bombPair?.bomb == null || bombPair?.count == 0)	continue;
 			
 			text.text += " - <sprite=\"" + bombPair.bomb.sprite.name + "\" index=0>: " + bombPair.flagCount + "/" + bombPair.count;
 		}
