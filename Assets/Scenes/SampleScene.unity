@@ -3571,6 +3571,7 @@ GameObject:
   - component: {fileID: 868566999}
   - component: {fileID: 868566998}
   - component: {fileID: 868566997}
+  - component: {fileID: 868567000}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -3639,6 +3640,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &868567000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868566996}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 48f32073815b9114fbc932c61b527dcc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FullScreenShortcut
 --- !u!1 &892837786
 GameObject:
   m_ObjectHideFlags: 0
@@ -4267,38 +4280,41 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Click to dismiss
+  m_text: 'Click text to dismiss
 
+    <size=25%>
 
-    Controls:
+    <size=100%>Controls:
+
+    F:
+    Toggle fullscreen
 
     LMB: Break
 
     RMB: Flag
 
-    MMB:
-    Clear Flag
+    MMB: Clear Flag
 
-    R+LMB: Chord
+    R+LMB:
+    Chord
 
     MMB Hold or Drag: Default Flag Menu
 
-    WASDQE:
-    Move and zoom
+    WASDQE: Move and zoom
 
 
-    < Go to settings to set the mistake count
+    <
+    Go to settings to set the mistake count
 
 
-    Hint Over
-    Flags can help with 50/50s
+    Hint Over Flags can help with 50/50s
 
 
-    Chords can hit bombs, so pay attention!
+    Chords
+    can hit bombs, so pay attention!
 
 
-    Man,
-    default TMPro font is so generic'
+    Man, default TMPro font is so generic'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -4795,6 +4811,22 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 8181c5ad-667c-438b-8650-4f490a27df9b
     m_ActionName: 'Default/Tab[/Keyboard/tab]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 868567000}
+        m_TargetAssemblyTypeName: FullScreenShortcut, Assembly-CSharp
+        m_MethodName: Fullscreen
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 9aa6e089-dbd3-49d1-89fc-576bf88edda0
+    m_ActionName: 'Default/Fulscreen[/Keyboard/f]'
   m_NeverAutoSwitchControlSchemes: 1
   m_DefaultControlScheme: 
   m_DefaultActionMap: Default

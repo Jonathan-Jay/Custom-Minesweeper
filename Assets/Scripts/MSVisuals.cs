@@ -261,7 +261,7 @@ public class MSVisuals : MonoBehaviour
 			if (!noHintsOverBombs && tile.hint.flagValue != 0)
 				tile.FlagText();
 			else if (tile.hasValue)
-				Reveal(tile.pos);
+				tile.UpdateText();
 		}
 		DoText();
 	}

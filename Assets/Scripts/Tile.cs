@@ -111,7 +111,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 
 	}
 
-	void UpdateText()
+	public void UpdateText()
 	{
 		SetText(visuals.useFlags ? hint.displayValue : hint.actualValue);
 	}
