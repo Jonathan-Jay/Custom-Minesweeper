@@ -17,7 +17,7 @@ public class MSVisuals : MonoBehaviour
 	public void SetOverheal(bool value) => noOverheal = !value;
 	public bool noHintsOverBombs {get; private set;} = true;
 	public bool useFlags {get; private set;} = false;
-	public bool playing {get; private set;} = false;
+	//public bool playing {get; private set;} = false;
 	[NonSerialized] public bool tileFlagged = true;
 	public int defaultFlag { get; private set;} = 0;
 	public event Action<int> seedUpdated;
@@ -49,7 +49,7 @@ public class MSVisuals : MonoBehaviour
 			if (!hover.noClicks)
 				winRect.gameObject.SetActive(true);
 			hover.SetNoClicks(true);
-			playing = false;
+			//playing = false;
 		};
 	}
 
@@ -164,7 +164,7 @@ public class MSVisuals : MonoBehaviour
 		{
 			loseRect.gameObject.SetActive(true);
 			hover.SetNoClicks(true);
-			playing = false;
+			//playing = false;
 			game.Lose();
 		}
 		DoText();
@@ -216,7 +216,7 @@ public class MSVisuals : MonoBehaviour
 		SetMaxMistakes(maxMistakes);
 		hover.SetNoClicks(false);
 		hover.mover.ResetCamera();
-		playing = true;
+		//playing = true;
 		DoText();
 		//Random.state = heldState;
 	}

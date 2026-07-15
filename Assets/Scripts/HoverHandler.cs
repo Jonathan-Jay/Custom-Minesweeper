@@ -31,15 +31,6 @@ public class HoverHandler : MonoBehaviour,
 		flagMenu.gameObject.SetActive(false);
 	}
 
-	public void ClearButtons()
-	{
-		lastHeld = null;
-		held = null;
-		button = -1;
-		ClearTrying();
-		CloseFlagMenu();
-	}
-
 	public void OnPointerDown(PointerEventData eventData)
 	{
 		if (noClicks || (button == 101 && eventData.button != PointerEventData.InputButton.Left) || startPos.x > -1000f || tryingHold != null)	return;
@@ -144,6 +135,15 @@ public class HoverHandler : MonoBehaviour,
 				break;
 		}
 
+	}
+
+	public void ClearButtons()
+	{
+		lastHeld = null;
+		held = null;
+		button = -1;
+		ClearTrying();
+		CloseFlagMenu();
 	}
 
 	IEnumerator FlagMenuHold(Vector2 position)
