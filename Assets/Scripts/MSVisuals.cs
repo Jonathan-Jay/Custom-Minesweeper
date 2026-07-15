@@ -8,7 +8,6 @@ public class MSVisuals : MonoBehaviour
 	public HoverHandler hover;
 	public MSMover mover;
 	public Minesweeper game { get; private set; }
-	[SerializeField] Tile tileTemplate;
 	public RectTransform boardParent;
 	public Color[] hintColours = { Color.grey };
 	public Color mysteryColour = Color.mediumPurple;
@@ -27,8 +26,12 @@ public class MSVisuals : MonoBehaviour
 	public Vector2 tileSize {get; private set;} = Vector2.zero;
 	public Vector2 offset {get; private set;}
 
+	[SerializeField] Tile tileTemplate;
+	[SerializeField] Image defaultFlagImage;
 	[SerializeField] TMPro.TMP_Text text;
 	[SerializeField] TMPro.TMP_Text timeText;
+	[SerializeField] TMPro.TMP_Text firstClickText;
+	[SerializeField] TMPro.TMP_Text currentPosText;
 	[SerializeField] RectTransform winRect;
 	[SerializeField] RectTransform loseRect;
 
@@ -41,13 +44,14 @@ public class MSVisuals : MonoBehaviour
 		game = GetComponent<Minesweeper>();
 		game.visibilityChanged += Reveal;
 		game.flagChanged += UpdateFlag;
+		game.mistakeMade += CheckMistake;
+		game.firstBreak += (Vector2Int pos) => firstClickText.text = (pos + Vector2Int.one).ToString();
 		game.winEvent += () => {
 			if (hover.enabled)
 				winRect.gameObject.SetActive(true);
 			hover.enabled = false;
 			playing = false;
 		};
-		game.mistakeMade += CheckMistake;
 	}
 
 	void Start()
@@ -189,6 +193,7 @@ public class MSVisuals : MonoBehaviour
 
 		if (!game.waitingForClick)
 		{
+			firstClickText.text = "";
 			foreach (Tile tile in board.linearGrid)
 				tile.Hide();
 		}
@@ -206,7 +211,7 @@ public class MSVisuals : MonoBehaviour
 			if (game.bombOptions[i]?.count > 0)
 				activeFlagList.Add(i);
 		}
-		defaultFlag = 0;
+		SetDefaultFlag(0);
 
 		mistakes = 0;
 		SetMaxMistakes(maxMistakes);
@@ -220,7 +225,8 @@ public class MSVisuals : MonoBehaviour
 	public void SetDefaultFlag(int val)
 	{
 		defaultFlag = activeFlagList[Mathf.Clamp(val, 0, activeFlagList.Count - 1)];
-		DoText();
+		defaultFlagImage.sprite = game.bombOptions[defaultFlag]?.bomb?.sprite;
+		defaultFlagImage.gameObject.SetActive(defaultFlag != 0);
 	}
 
 	public void SetFlag(Vector2Int pos)
@@ -278,21 +284,36 @@ public class MSVisuals : MonoBehaviour
 	{
 		text.text = "HP: " + (maxMistakes - mistakes) + "/" + maxMistakes + " <sprite=\"BGTile\" index=0>: " + game.tileCount;
 
+		/* Render default flag in the hud
 		Bomb bomb = game.bombOptions[defaultFlag]?.bomb;
 		if (bomb)
 			text.text += " ><sprite=\"" + bomb.sprite.name + "\" index=0><";
+		//*/
 
 		foreach (int index in activeFlagList)
 		{
 			var bombPair = game.bombOptions[index];
 			if (bombPair?.bomb == null || bombPair?.count == 0)	continue;
 			
-			text.text += " - <sprite=\"" + bombPair.bomb.sprite.name + "\" index=0>: " + bombPair.flagCount + "/" + bombPair.count;
+			text.text += " - <sprite=\"" + bombPair.bomb.sprite.name + "\" index=0>: <color=";
+			switch (bombPair.count - bombPair.flagCount)
+			{
+				case > 0:
+					text.text += "white";
+					break;
+				case 0:
+					text.text += "green";
+					break;
+				case < 0:
+					text.text += "red";
+					break;
+			}
+			text.text += ">" + bombPair.flagCount + "/" + bombPair.count;
 		}
 	}
 
-	public Tile GetTile(Vector2Int pos)
+	public void SetCursorText(Vector2Int pos)
 	{
-		return board.GetCell(pos);
+		currentPosText.text = pos.x < 0 ? "" : (pos + Vector2Int.one).ToString();
 	}
 }

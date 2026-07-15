@@ -25,6 +25,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 	
 	public void OnPointerEnter(PointerEventData eventData)
 	{
+		visuals.SetCursorText(pos);
 		visuals.tileFlagged = false;
 		visuals.hover.held = this;
 	}
@@ -32,7 +33,10 @@ public class Tile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 	public void OnPointerExit(PointerEventData eventData)
 	{
 		if (visuals.hover.held == this)
+		{
 			visuals.hover.held = null;
+			visuals.SetCursorText(Vector2Int.left);
+		}
 	}
 
 	public void ProcessInput()

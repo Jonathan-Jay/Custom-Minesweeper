@@ -55,6 +55,7 @@ public class FlagMenu : MonoBehaviour
 	public void SetPos(Vector2 pos)
 	{
 		rect.anchoredPosition = pos;
+		UpdateAngle(0f);
 	}
 
 	public void UpdateAngle(float angle)

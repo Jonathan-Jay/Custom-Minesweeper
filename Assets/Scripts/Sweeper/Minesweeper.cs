@@ -31,6 +31,7 @@ public class Minesweeper : MonoBehaviour
 	public event Action<Vector2Int> visibilityChanged;
 	public event Action<Vector2Int> flagChanged;
 	public event Action<Bomb> mistakeMade;
+	public event Action<Vector2Int> firstBreak;
 	public event Action winEvent;
 	Dictionary<Vector2Int, Bomb> bombList = new Dictionary<Vector2Int, Bomb>();
 
@@ -203,6 +204,8 @@ public class Minesweeper : MonoBehaviour
 
 			firstClick = pos;
 			time = Time.unscaledTime;
+
+			firstBreak?.Invoke(pos);
 		}
 
 		if (visibleGrid.GetCell(pos) || GetHint(pos).flagValue > 0)
@@ -248,7 +251,6 @@ public class Minesweeper : MonoBehaviour
 
 		visibleGrid.SetCell(pos, true);
 		hint.SetStatus(Hint.TileStatus.Open);
-		visibilityChanged?.Invoke(pos);
 
 		if (bombList.ContainsKey(pos))
 		{
@@ -263,6 +265,8 @@ public class Minesweeper : MonoBehaviour
 
 			mistakeMade?.Invoke(bomb.bomb);
 		}
+		
+		visibilityChanged?.Invoke(pos);
 	}
 
 	WaitForFixedUpdate wffu = new WaitForFixedUpdate();

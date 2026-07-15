@@ -76,11 +76,9 @@ public class MSCustomizer : MonoBehaviour
 		if (!gameObject.activeInHierarchy)
 		{
 			gameObject.SetActive(true);
+			visuals.mover.deactivated = true;
 			if (visuals.playing)
-			{
-				visuals.mover.deactivated = true;
 				visuals.hover.enabled = false;
-			}
 			tempSize = visuals.game.size;
 			forceUpdate = false;
 			return;
@@ -89,11 +87,9 @@ public class MSCustomizer : MonoBehaviour
 		visuals.ValidateChanges(tempSize, forceUpdate);
 
 		gameObject.SetActive(false);
+		visuals.mover.deactivated = false;
 		if (visuals.playing)
-		{
-			visuals.mover.deactivated = false;
 			visuals.hover.enabled = true;
-		}
 	}
 
 	public void UpdateBombList()
