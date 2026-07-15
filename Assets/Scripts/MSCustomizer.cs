@@ -5,7 +5,6 @@ using UnityEngine.UI;
 public class MSCustomizer : MonoBehaviour
 {
 	public MSVisuals visuals;
-	public MSMover mover;
 
 	public Color regularInputField = Color.white;
 	public Color emptyInputField = Color.grey;
@@ -51,7 +50,6 @@ public class MSCustomizer : MonoBehaviour
 
 		IEnumerator DelayedStart() {
 			yield return null;
-			mover.movementBounds = visuals.boardParent.sizeDelta * 0.5f - Vector2.one * 50f;
 			
 			img.enabled = true;
 			gameObject.SetActive(false);
@@ -80,7 +78,7 @@ public class MSCustomizer : MonoBehaviour
 			gameObject.SetActive(true);
 			if (visuals.playing)
 			{
-				mover.deactivated = true;
+				visuals.mover.deactivated = true;
 				visuals.hover.enabled = false;
 			}
 			tempSize = visuals.game.size;
@@ -89,12 +87,11 @@ public class MSCustomizer : MonoBehaviour
 		}
 
 		visuals.ValidateChanges(tempSize, forceUpdate);
-		mover.movementBounds = visuals.boardParent.sizeDelta * 0.5f - Vector2.one * 50f;
 
 		gameObject.SetActive(false);
 		if (visuals.playing)
 		{
-			mover.deactivated = false;
+			visuals.mover.deactivated = false;
 			visuals.hover.enabled = true;
 		}
 	}

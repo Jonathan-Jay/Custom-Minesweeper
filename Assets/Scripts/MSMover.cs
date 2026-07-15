@@ -4,9 +4,12 @@ using UnityEngine.InputSystem;
 
 public class MSMover : MonoBehaviour
 {
-	[SerializeField] public RectTransform zoomRect;
+	[SerializeField] RectTransform zoomRect;
 	[SerializeField] float zoomSpeed = 1f;
-	[SerializeField] Vector2 zoomBounds = new Vector2(0.5f, 5f);
+	public Vector2 zoomBounds = new Vector2(0.5f, 5f);
+	public float minimumZoom = 0.5f;
+	public float referenceHeight = 800f;
+	[NonSerialized] public float currentHeight = 0;
 	[SerializeField] RectTransform moveRect;
 	[SerializeField] float moveSpeed = 150f;
 	public Vector2 movementBounds = Vector2.zero;
@@ -20,13 +23,10 @@ public class MSMover : MonoBehaviour
 	}
 	public float zoom {get; private set;}
 	Vector2 direction;
-	//RectTransform rect;
 
 	void Awake()
 	{
-		//rect = GetComponent<RectTransform>();
 		deactivated = false;
-		ResetCamera();
 	}
 
 	public void Move(InputAction.CallbackContext context)
@@ -54,8 +54,8 @@ public class MSMover : MonoBehaviour
 	
 	public void ResetCamera()
 	{
-		zoom = Mathf.Sqrt(Mathf.InverseLerp(zoomBounds.x, zoomBounds.y, 1f));
-		zoomRect.localScale = Vector2.one;
+		zoom = Mathf.Sqrt(Mathf.InverseLerp(zoomBounds.x, zoomBounds.y, referenceHeight / currentHeight));
+		zoomRect.localScale = Vector3.one * Mathf.Lerp(zoomBounds.x, zoomBounds.y, zoom * zoom);
 		moveRect.anchoredPosition = Vector2.zero;
 	}
 

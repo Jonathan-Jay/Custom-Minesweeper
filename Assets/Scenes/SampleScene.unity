@@ -654,6 +654,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hover: {fileID: 1192621575}
+  mover: {fileID: 1192621576}
   tileTemplate: {fileID: 142934740906912347, guid: 6318d289f1a197e4489746261d0c72c6, type: 3}
   boardParent: {fileID: 768137999}
   hintColours:
@@ -774,7 +775,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MSCustomizer
   visuals: {fileID: 29168952}
-  mover: {fileID: 1192621576}
   regularInputField: {r: 1, g: 1, b: 1, a: 0.5921569}
   emptyInputField: {r: 0.4415095, g: 0.4415095, b: 0.4415095, a: 0.5921569}
   positiveInputField: {r: 0.5176471, g: 1, b: 0.5176471, a: 0.5921569}
@@ -5693,7 +5693,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MSMover
   zoomRect: {fileID: 1557001949}
   zoomSpeed: 0.05
-  zoomBounds: {x: 0.25, y: 5}
+  zoomBounds: {x: 0, y: 5}
+  minimumZoom: 0.5
+  referenceHeight: 800
   moveRect: {fileID: 768137999}
   moveSpeed: 250
   movementBounds: {x: 0, y: 0}
@@ -9687,7 +9689,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 29168950}
         m_TargetAssemblyTypeName: Minesweeper, Assembly-CSharp
-        m_MethodName: SetAnimated
+        m_MethodName: SetRandomBreak
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

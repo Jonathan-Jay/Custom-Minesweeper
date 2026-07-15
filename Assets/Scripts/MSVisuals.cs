@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class MSVisuals : MonoBehaviour
 {
 	public HoverHandler hover;
+	public MSMover mover;
 	public Minesweeper game { get; private set; }
 	[SerializeField] Tile tileTemplate;
 	public RectTransform boardParent;
@@ -61,7 +62,6 @@ public class MSVisuals : MonoBehaviour
 		hover.callbackM = game.ClearFlag;
 
 		Resize();
-		SetMaxMistakes(maxMistakes);
 
 		SetupGame(false);
 	}
@@ -83,8 +83,14 @@ public class MSVisuals : MonoBehaviour
 		board = new NodeGrid<Tile>(game.size);
 
 		boardParent.sizeDelta = tileSize * game.size;
+		mover.currentHeight = Mathf.Max(boardParent.sizeDelta.x, boardParent.sizeDelta.y);
+		mover.movementBounds = boardParent.sizeDelta * 0.5f - Vector2.one * 50f;
+		mover.zoomBounds.x = Mathf.Min(mover.referenceHeight / mover.currentHeight, mover.minimumZoom);
+
 		boardBG.uvRect = new Rect(Vector2.zero, game.size);
 		offset = new Vector2((game.size.x * -0.5f + 0.5f) * tileSize.x, (game.size.y * -0.5f + 0.5f) * tileSize.y);
+
+
 
 		Vector2Int pos = Vector2Int.zero;
 		for (pos.x = 0; pos.x < game.size.x; ++pos.x)
@@ -203,7 +209,9 @@ public class MSVisuals : MonoBehaviour
 		defaultFlag = 0;
 
 		mistakes = 0;
+		SetMaxMistakes(maxMistakes);
 		hover.enabled = true;
+		mover.ResetCamera();
 		playing = true;
 		DoText();
 		//Random.state = heldState;
