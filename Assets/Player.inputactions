@@ -55,8 +55,8 @@
                     "name": "Zoom",
                     "type": "PassThrough",
                     "id": "9272a4d2-0407-450c-8cc0-1626208d8bbe",
-                    "expectedControlType": "Analog",
-                    "processors": "",
+                    "expectedControlType": "Vector2",
+                    "processors": "ScaleVector2(x=4,y=4)",
                     "interactions": "",
                     "initialStateCheck": true
                 },
@@ -74,6 +74,15 @@
                     "type": "Button",
                     "id": "2741374a-b883-414f-91f2-3f631405f7d9",
                     "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Tab",
+                    "type": "PassThrough",
+                    "id": "8181c5ad-667c-438b-8650-4f490a27df9b",
+                    "expectedControlType": "Vector2",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -215,27 +224,16 @@
                 {
                     "name": "QE",
                     "id": "9a70e354-c88c-4c1d-8e6e-e987efa2fa91",
-                    "path": "1DAxis",
+                    "path": "2DVector",
                     "interactions": "",
-                    "processors": "",
+                    "processors": "ScaleVector2(x=5,y=5)",
                     "groups": "",
                     "action": "Zoom",
                     "isComposite": true,
                     "isPartOfComposite": false
                 },
                 {
-                    "name": "Negative",
-                    "id": "3deb0548-1cd8-43e0-b43f-ac79372e7fe6",
-                    "path": "<Keyboard>/q",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Zoom",
-                    "isComposite": false,
-                    "isPartOfComposite": true
-                },
-                {
-                    "name": "Positive",
+                    "name": "Up",
                     "id": "8af52c57-4268-4461-a713-9c0a3c810e76",
                     "path": "<Keyboard>/e",
                     "interactions": "",
@@ -246,11 +244,44 @@
                     "isPartOfComposite": true
                 },
                 {
-                    "name": "",
-                    "id": "f6a5165d-7904-4c52-a6a3-10b62fade40d",
-                    "path": "<Mouse>/scroll/y",
+                    "name": "Down",
+                    "id": "3deb0548-1cd8-43e0-b43f-ac79372e7fe6",
+                    "path": "<Keyboard>/q",
                     "interactions": "",
-                    "processors": "Scale(factor=0.2)",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Zoom",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "Left",
+                    "id": "2a3f62cf-3941-420a-bb55-3cbf4682e760",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Zoom",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "Right",
+                    "id": "8963dbbf-ca47-430d-87fd-b84ff07dfd75",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Zoom",
+                    "isComposite": false,
+                    "isPartOfComposite": true
+                },
+                {
+                    "name": "",
+                    "id": "9bfb5cd2-4929-47e2-9c4c-136b930bdba0",
+                    "path": "<Mouse>/scroll",
+                    "interactions": "",
+                    "processors": "",
                     "groups": "",
                     "action": "Zoom",
                     "isComposite": false,
@@ -302,17 +333,6 @@
                 },
                 {
                     "name": "",
-                    "id": "64b1fc52-5a1e-4587-8c9a-72319705054b",
-                    "path": "",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Submit",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
                     "id": "20507be5-ad09-4847-bb64-6db1263d17a8",
                     "path": "<Keyboard>/escape",
                     "interactions": "",
@@ -321,6 +341,28 @@
                     "action": "Escape",
                     "isComposite": false,
                     "isPartOfComposite": false
+                },
+                {
+                    "name": "2D Vector",
+                    "id": "02a99a05-3106-4d67-ac8d-9832a472b7c2",
+                    "path": "2DVector",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Tab",
+                    "isComposite": true,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "right",
+                    "id": "f61cfb51-2702-4b88-8200-4607010f536a",
+                    "path": "<Keyboard>/tab",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Tab",
+                    "isComposite": false,
+                    "isPartOfComposite": true
                 }
             ]
         }

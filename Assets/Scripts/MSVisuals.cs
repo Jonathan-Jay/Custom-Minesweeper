@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MSVisuals : MonoBehaviour
 {
@@ -11,21 +13,27 @@ public class MSVisuals : MonoBehaviour
 	public Color mysteryColour = Color.mediumPurple;
 
 	public int mistakes {get; private set;} = 0;
-	public int maxMistakes {get; private set;} = 3;
-	public bool NoHintsOverBombs {get; private set;} = true;
+	public int maxMistakes {get; private set;} = 999;
+	public bool noOverheal {get; private set;} = false;
+	public void SetOverheal(bool value) => noOverheal = !value;
+	public bool noHintsOverBombs {get; private set;} = true;
 	public bool useFlags {get; private set;} = false;
+	public bool playing {get; private set;} = false;
 	[NonSerialized] public bool tileFlagged = true;
-	public int defaultFlag { get; private set;}= 0;
-	public Action<int> seedUpdated;
+	public int defaultFlag { get; private set;} = 0;
+	public event Action<int> seedUpdated;
+	public event Action bombListUpdated;
 	public Vector2 tileSize {get; private set;} = Vector2.zero;
+	public Vector2 offset {get; private set;}
 
-	[SerializeField] FlagMenu flagMenu;
 	[SerializeField] TMPro.TMP_Text text;
 	[SerializeField] TMPro.TMP_Text timeText;
 	[SerializeField] RectTransform winRect;
 	[SerializeField] RectTransform loseRect;
 
-	NodeGrid<Tile> board;
+	NodeGrid<Tile> board = null;
+	List<int> activeFlagList;
+	RawImage boardBG = null;
 
 	void Awake()
 	{
@@ -36,18 +44,47 @@ public class MSVisuals : MonoBehaviour
 			if (hover.enabled)
 				winRect.gameObject.SetActive(true);
 			hover.enabled = false;
+			playing = false;
 		};
 		game.mistakeMade += CheckMistake;
-
-		board = new NodeGrid<Tile>(game.size);
 	}
 
 	void Start()
 	{
+		activeFlagList = new List<int>(game.bombOptions.Count);
+
+		boardBG = boardParent.GetComponent<RawImage>();
 		tileSize = tileTemplate.GetComponent<RectTransform>().sizeDelta;
-		Vector2 offset = new Vector2((game.size.x * -0.5f + 0.5f) * tileSize.x, (game.size.y * -0.5f + 0.5f) * tileSize.y);
 		
+		hover.callbackL = game.Click;
+		hover.callbackR = SetFlag;
+		hover.callbackM = game.ClearFlag;
+
+		Resize();
+		SetMaxMistakes(maxMistakes);
+
+		SetupGame(false);
+	}
+
+	void Update()
+	{
+		timeText.text = game.time.ToString("0.00");
+	}
+
+	void Resize()
+	{
+		if (game.size == board?.size)	return;
+		
+		if (board?.linearGrid != null)
+		{
+			foreach (var tile in board.linearGrid)
+				Destroy(tile.gameObject);
+		}
+		board = new NodeGrid<Tile>(game.size);
+
 		boardParent.sizeDelta = tileSize * game.size;
+		boardBG.uvRect = new Rect(Vector2.zero, game.size);
+		offset = new Vector2((game.size.x * -0.5f + 0.5f) * tileSize.x, (game.size.y * -0.5f + 0.5f) * tileSize.y);
 
 		Vector2Int pos = Vector2Int.zero;
 		for (pos.x = 0; pos.x < game.size.x; ++pos.x)
@@ -63,29 +100,26 @@ public class MSVisuals : MonoBehaviour
 				board.SetCell(pos, tile);
 			}
 		}
-
-		hover.callbackL = game.Click;
-		hover.callbackR = SetFlag;
-		hover.callbackM = game.ClearFlag;
-
-		SetMaxMistakes(maxMistakes);
-		flagMenu.gameObject.SetActive(false);
-
-		SetupGame(false);
 	}
 
-	void Update()
-	{
-		timeText.text = "Time: " + game.time.ToString("0.00");
-	}
-
-	public void ValidateChanges(Vector2Int newSize)
+	public void ValidateChanges(Vector2Int newSize, bool forceUpdate)
 	{
 		int bombCount = game.bombCount;
+		SetMaxMistakes(maxMistakes);
+
+		Vector2 size = game.size;
 		game.SetSize(newSize);
+		
+		if (forceUpdate || size != newSize)
+		{
+			Resize();
+			SetupGame(false);
+			return;
+		}
+
 		if (game.waitingForClick)
 		{
-			int tileCount = game.tileCount - game.bombCount;
+			int tileCount = game.totalTileCount - game.bombCount;
 
 			int radius = game.initialIslandRadius + game.initialIslandRadius + 1;
 			radius *= radius;
@@ -101,7 +135,8 @@ public class MSVisuals : MonoBehaviour
 		int max = 0;
 		foreach (Minesweeper.BombPair bombPair in game.bombOptions)
 		{
-			if (bombPair?.bomb == null) continue;
+			if (bombPair?.bomb == null || bombPair?.bomb.damage <= 0) continue;
+
 			max += bombPair.count * bombPair.bomb.damage;
 		}
 
@@ -112,11 +147,16 @@ public class MSVisuals : MonoBehaviour
 	void CheckMistake(Bomb bomb)
 	{
 		mistakes += bomb.damage;
+
+		if (noOverheal)
+			mistakes = Mathf.Max(mistakes, 0);
+
 		if (mistakes >= maxMistakes)
 		{
 			loseRect.gameObject.SetActive(true);
 			hover.enabled = false;
-			game.time = -game.time;
+			playing = false;
+			game.Lose();
 		}
 		DoText();
 	}
@@ -150,18 +190,28 @@ public class MSVisuals : MonoBehaviour
 		if (newSeed)
 			game.seed = 0;
 		game.Generate();
+
 		seedUpdated?.Invoke(game.seed);
-		
+		bombListUpdated?.Invoke();
+		activeFlagList.Clear();
+		activeFlagList.Add(0);
+		for (int i = 0; i < game.bombOptions.Count; ++i)
+		{
+			if (game.bombOptions[i]?.count > 0)
+				activeFlagList.Add(i);
+		}
+		defaultFlag = 0;
+
 		mistakes = 0;
 		hover.enabled = true;
+		playing = true;
 		DoText();
-
 		//Random.state = heldState;
 	}
 
 	public void SetDefaultFlag(int val)
 	{
-		defaultFlag = Mathf.Clamp(val, 0, game.bombOptions.Count - 1);
+		defaultFlag = activeFlagList[Mathf.Clamp(val, 0, activeFlagList.Count - 1)];
 		DoText();
 	}
 
@@ -170,16 +220,16 @@ public class MSVisuals : MonoBehaviour
 		int value = defaultFlag;
 		Tile tile = board.GetCell(pos);
 		if (tileFlagged || value == 0 || value == tile.hint.flagValue)
-			value = (tile.hint.flagValue + 1) % game.bombOptions.Count;
+			value = activeFlagList[(activeFlagList.IndexOf(tile.hint.flagValue) + 1) % activeFlagList.Count];
 		tileFlagged = true;
 		game.SetFlag(pos, value);
 	}
 
 	public void ToggleHintOverBombs(bool option)
 	{
-		if (NoHintsOverBombs == !option)	return;
+		if (noHintsOverBombs == !option)	return;
 
-		NoHintsOverBombs = !option;
+		noHintsOverBombs = !option;
 		foreach (Tile tile in board.linearGrid)
 		{
 			//for any flags in general
@@ -195,7 +245,7 @@ public class MSVisuals : MonoBehaviour
 		useFlags = option;
 		foreach (Tile tile in board.linearGrid)
 		{
-			if (!NoHintsOverBombs && tile.hint.flagValue != 0)
+			if (!noHintsOverBombs && tile.hint.flagValue != 0)
 				tile.FlagText();
 			else if (tile.hasValue)
 				Reveal(tile.pos);
@@ -218,19 +268,23 @@ public class MSVisuals : MonoBehaviour
 
 	void DoText()
 	{
-		text.text = "Tiles remaining: " + game.tileCount;
-		
+		text.text = "HP: " + (maxMistakes - mistakes) + "/" + maxMistakes + " <sprite=\"BGTile\" index=0>: " + game.tileCount;
+
 		Bomb bomb = game.bombOptions[defaultFlag]?.bomb;
 		if (bomb)
-			text.text += " - Flag with ><sprite=\"" + bomb.sprite.name + "\" index=0><";
+			text.text += " ><sprite=\"" + bomb.sprite.name + "\" index=0><";
 
-		text.text += " - HP: " + (maxMistakes - mistakes) + "/" + maxMistakes;
-
-		foreach (var bombPair in game.bombOptions)
+		foreach (int index in activeFlagList)
 		{
+			var bombPair = game.bombOptions[index];
 			if (bombPair?.bomb == null || bombPair?.count == 0)	continue;
 			
 			text.text += " - <sprite=\"" + bombPair.bomb.sprite.name + "\" index=0>: " + bombPair.flagCount + "/" + bombPair.count;
 		}
+	}
+
+	public Tile GetTile(Vector2Int pos)
+	{
+		return board.GetCell(pos);
 	}
 }

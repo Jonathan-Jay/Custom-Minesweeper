@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97f7073ff013af34dbaa955d5011beb5, type: 3}
+  m_Name: Strong
+  m_EditorClassIdentifier: Assembly-CSharp::Bomb
+  sprite: {fileID: 21300000, guid: e6f8a5e876087634e8ed5686b46c6cff, type: 3}
+  damage: 999
+  offset: {x: 1, y: 1}
+  hintSize: {x: 3, y: 3}
+  hintGrid: 630000006300000063000000630000000000000063000000630000006300000063000000

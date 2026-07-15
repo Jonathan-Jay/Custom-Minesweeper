@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97f7073ff013af34dbaa955d5011beb5, type: 3}
+  m_Name: BigBomb
+  m_EditorClassIdentifier: Assembly-CSharp::Bomb
+  sprite: {fileID: 21300000, guid: 360a93b30ecc4ba4eb88b8386ac5f94f, type: 3}
+  damage: 5
+  offset: {x: 2, y: 2}
+  hintSize: {x: 5, y: 5}
+  hintGrid: 00000000320000003200000032000000000000003200000063000000630000006300000032000000320000006300000000000000630000003200000032000000630000006300000063000000320000000000000032000000320000003200000000000000

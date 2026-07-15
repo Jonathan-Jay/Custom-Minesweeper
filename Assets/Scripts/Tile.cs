@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Tile : MonoBehaviour, IPointerEnterHandler//, IPointerExitHandler
+public class Tile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
 	public Vector2Int pos;
 	public Hint hint;
@@ -29,9 +29,11 @@ public class Tile : MonoBehaviour, IPointerEnterHandler//, IPointerExitHandler
 		visuals.hover.held = this;
 	}
 
-	/*public void OnPointerExit(PointerEventData eventData)
+	public void OnPointerExit(PointerEventData eventData)
 	{
-	}*/
+		if (visuals.hover.held == this)
+			visuals.hover.held = null;
+	}
 
 	public void ProcessInput()
 	{
@@ -56,7 +58,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler//, IPointerExitHandler
 		flag.gameObject.SetActive(false);
 		tile.gameObject.SetActive(true);
 		//rect.sizeDelta = visuals.tileSize;
-		if (hasValue || (!visuals.NoHintsOverBombs && hint.flagValue != 0))
+		if (hasValue || (!visuals.noHintsOverBombs && hint.flagValue != 0))
 			hint.valueChanged -= UpdateText;
 		
 		text.text = "";
@@ -90,7 +92,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler//, IPointerExitHandler
 
 	public void FlagText(bool toggle = false)
 	{
-		if (visuals.NoHintsOverBombs)
+		if (visuals.noHintsOverBombs)
 		{
 			hint.valueChanged -= UpdateText;
 
@@ -135,14 +137,14 @@ public class Tile : MonoBehaviour, IPointerEnterHandler//, IPointerExitHandler
 	{
 		if (flagImg)
 		{
-			if (!visuals.NoHintsOverBombs && !flag.gameObject.activeInHierarchy)
+			if (!visuals.noHintsOverBombs && !flag.gameObject.activeInHierarchy)
 				FlagText(true);
 
 			flag.gameObject.SetActive(true);
 		}
 		else
 		{
-			if (!visuals.NoHintsOverBombs)
+			if (!visuals.noHintsOverBombs)
 			{
 				hint.valueChanged -= UpdateText;
 				text.text = "";

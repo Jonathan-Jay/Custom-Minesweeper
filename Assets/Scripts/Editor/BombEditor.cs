@@ -80,7 +80,7 @@ public class BombEditor : Editor
 		EditorGUILayout.LabelField("Hint pattern:", style);
 
 		SerializedProperty val;
-		for (int y = 0; y < size.y; ++y)
+		for (int y = size.y - 1; y >= 0; --y)
 		{
 			EditorGUILayout.BeginHorizontal();
 			EditorGUILayout.Space();

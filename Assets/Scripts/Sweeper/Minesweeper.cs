@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 //using Random = UnityEngine.Random;
@@ -35,20 +34,26 @@ public class Minesweeper : MonoBehaviour
 	public event Action winEvent;
 	Dictionary<Vector2Int, Bomb> bombList = new Dictionary<Vector2Int, Bomb>();
 
+	public float deathAnimDuration = 2f;
+
 	public Vector2Int firstClick {get; private set;} = -Vector2Int.one;
 	public bool waitingForClick {get => firstClick == -Vector2Int.one; private set {if (value) firstClick = -Vector2Int.one;}}
 	private float winTime = 0f;
 	public float time {get => winTime >= 0f ? winTime : Time.unscaledTime + winTime; set => winTime = -value;}
 	public int tileCount {get; private set;} = 0;
+	public int totalTileCount {get; private set;} = 0;
 	public int mistakes {get; private set;} = 0;
 	public int bombCount {get; private set;} = 0;
 
-	public bool chordsValidateFlags = true;
+	public bool chordsValidateFlags { get; private set; } = true;
 	public void SetChords(bool val) => chordsValidateFlags = val;
-	public bool animating {get; private set;} = false;
-	public bool animated = false;
+	public bool animated { get; private set; } = false;
 	public void SetAnimated(bool val) => animated = val;
-	public bool randomBreak = false;
+	public bool randomBreak { get; private set; } = false;
+	public void SetRandomBreak(bool val) => randomBreak = val;
+	public bool revealOnDeath { get; private set; } = true;
+	public void SetRevealOnDeath(bool val) => revealOnDeath = val;
+	public bool animating {get; private set;} = false;
 
 	[NonSerialized] Random random = new Random();
 	//Random.State heldState;
@@ -58,6 +63,7 @@ public class Minesweeper : MonoBehaviour
 		foreach (BombPair bombPair in bombOptions)
 		{
 			if (bombPair?.bomb == null) continue;
+			bombPair.flagCount = 0;
 			bombPair.realCount = bombPair.count;
 		}
 		bombOptions.Insert(0, null);
@@ -77,12 +83,6 @@ public class Minesweeper : MonoBehaviour
 		};
 	}
 
-	public void DeValidate()
-	{
-		waitingForClick = true;
-		bombCount = 0;
-	}
-
 	public void SetSize(Vector2Int newSize)
 	{
 		if (animating || newSize.x < 1 || newSize.y < 1)	return;
@@ -100,13 +100,12 @@ public class Minesweeper : MonoBehaviour
 			//firstClick = -Vector2Int.one;
 			waitingForClick = true;
 		}
-		tileCount = size.x * size.y;
+		totalTileCount = size.x * size.y;
 
 		bombCount = 0;
 		foreach (BombPair bombPair in bombOptions)
 		{
 			if (bombPair?.bomb == null) continue;
-			bombPair.flagCount = 0;
 			bombCount += bombPair.realCount;
 		}
 
@@ -115,7 +114,7 @@ public class Minesweeper : MonoBehaviour
 		//precount bombs. We do this often, but it's good for data verification
 		int radius = initialIslandRadius + initialIslandRadius + 1;
 		radius *= radius;
-		bombCount = Mathf.Min(bombCount, tileCount - radius);
+		bombCount = Mathf.Min(bombCount, totalTileCount - radius);
 	}
 
 	public void SetRadius(int value)
@@ -141,7 +140,7 @@ public class Minesweeper : MonoBehaviour
 
 		int radius = initialIslandRadius + initialIslandRadius + 1;
 		radius *= radius;
-		tileCount = size.x * size.y - radius;
+		totalTileCount = size.x * size.y - radius;
 
 		bombCount = 0;
 		foreach (BombPair bombPair in bombOptions)
@@ -152,10 +151,10 @@ public class Minesweeper : MonoBehaviour
 			bombPair.count = bombPair.realCount;
 
 			bombCount += bombPair.count;
-			if (bombCount > tileCount)
+			if (bombCount > totalTileCount)
 			{
 				bombCount -= bombPair.count;
-				bombPair.count = tileCount - bombCount;
+				bombPair.count = totalTileCount - bombCount;
 				bombCount += bombPair.count;
 			}
 
@@ -166,7 +165,8 @@ public class Minesweeper : MonoBehaviour
 					++c;
 			}
 		}
-		tileCount += radius - bombCount;
+		totalTileCount += radius - bombCount;
+		tileCount = totalTileCount;
 
 		//heldState = Random.state;
 		firstClick = -Vector2Int.one;
@@ -205,10 +205,10 @@ public class Minesweeper : MonoBehaviour
 			time = Time.unscaledTime;
 		}
 
-		if (visibleGrid.GetCell(pos) || hintGrid.GetCell(pos).flagValue > 0)
+		if (visibleGrid.GetCell(pos) || GetHint(pos).flagValue > 0)
 			return;
 
-		Hint hint = hintGrid.GetCell(pos);
+		Hint hint = GetHint(pos);
 
 		//Must be visible
 		OpenCell(pos, hint);
@@ -221,7 +221,7 @@ public class Minesweeper : MonoBehaviour
 
 	public void BigClick(Vector2Int pos)
 	{
-		if (animating || waitingForClick || (chordsValidateFlags && hintGrid.GetCell(pos).displayValue != 0))
+		if (animating || waitingForClick || (chordsValidateFlags && GetHint(pos).displayValue != 0))
 			return;
 
 		Queue<Tuple<Vector2Int, bool>> scanPoses = new Queue<Tuple<Vector2Int, bool>>();
@@ -230,7 +230,7 @@ public class Minesweeper : MonoBehaviour
 		{
 			for (offset.y = Mathf.Max(0, pos.y - 1); offset.y < Mathf.Min(size.y, pos.y + 2); ++offset.y)
 			{
-				Hint hint = hintGrid.GetCell(offset);
+				Hint hint = GetHint(offset);
 
 				if (offset == pos || visibleGrid.GetCell(offset) || hint.flagValue > 0)
 					continue;
@@ -302,7 +302,7 @@ public class Minesweeper : MonoBehaviour
 					if (offset == cur.Item1 || visibleGrid.GetCell(offset))
 						continue;
 
-					Hint hint = hintGrid.GetCell(offset);
+					Hint hint = GetHint(offset);
 					if (offset.x == cur.Item1.x || offset.y == cur.Item1.y)
 						hint.SetStatus(Hint.TileStatus.Neighbouring, true);
 
@@ -329,6 +329,54 @@ public class Minesweeper : MonoBehaviour
 		animating = false;
 	}
 
+
+	//currently doesn't actually do anything besides
+	public void Lose()
+	{
+		time = -time;
+		if (!revealOnDeath) return;
+
+		StartCoroutine(LoseAnimationCoroutine());
+	}
+
+	IEnumerator LoseAnimationCoroutine()
+	{
+		// Seems the break animations break this lmao
+		animating = true;
+		yield return wffu;
+		animating = true;
+
+		WaitForSecondsRealtime wait = null;
+		if (animated)
+			wait = new WaitForSecondsRealtime(deathAnimDuration / (bombCount - mistakes));
+
+		foreach (Vector2Int pos in bombList.Keys)
+		{
+			Hint hint = GetHint(pos);
+
+			// Skip already opened bombs
+			if (hint.flagValue < 0)	continue;
+			
+			if (animated)
+				yield return wait;
+
+			visibleGrid.SetCell(pos, true);
+			hint.SetStatus(Hint.TileStatus.Open);
+			visibilityChanged?.Invoke(pos);
+
+			if (hint.flagValue > 0)
+				bombOptions[hint.flagValue].bomb.UpdateHints(pos, hintGrid, true, 1);
+
+			//guaranteed flags are marked with negative values
+			hint.flagValue = -hint.bomb;
+			BombPair bomb = bombOptions[hint.bomb];
+			bomb.bomb.UpdateHints(pos, hintGrid, true, -1);
+			flagChanged?.Invoke(pos);
+		}
+
+		animating = false;
+	}
+
 	public void ClearFlag(Vector2Int pos)
 	{
 		SetFlag(pos, 0);
@@ -338,7 +386,7 @@ public class Minesweeper : MonoBehaviour
 	{
 		if ((visibleGrid.GetCell(pos) && !bombList.ContainsKey(pos)) || waitingForClick) return;
 
-		Hint hint = hintGrid.GetCell(pos);
+		Hint hint = GetHint(pos);
 		if (hint.flagValue < 0) return;
 
 		if (hint.flagValue != 0)
@@ -371,7 +419,7 @@ public class Minesweeper : MonoBehaviour
 
 	public Sprite GetFlag(Vector2Int pos)
 	{
-		return bombOptions[Mathf.Abs(hintGrid.GetCell(pos).flagValue)]?.bomb?.sprite;
+		return bombOptions[Mathf.Abs(GetHint(pos).flagValue)]?.bomb?.sprite;
 	}
 
 	bool InBounds(Vector2Int pos, Vector2Int minBounds, Vector2Int maxBounds)

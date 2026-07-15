@@ -41,7 +41,7 @@ public class MSMover : MonoBehaviour
 	{
 		if (deactivated)
 			return;
-		zoom = Mathf.Clamp(zoom + 0.1f * context.ReadValue<float>() * zoomSpeed, 0f, 1f);
+		zoom = Mathf.Clamp(zoom + 0.1f * context.ReadValue<Vector2>().y * zoomSpeed, 0f, 1f);
 		zoomRect.localScale = Vector3.one * Mathf.Lerp(zoomBounds.x, zoomBounds.y, zoom * zoom);
 	}
 
