@@ -120,7 +120,7 @@ public class Minesweeper : MonoBehaviour
 
 	public void SetRadius(int value)
 	{
-		initialIslandRadius = Mathf.Clamp(value, 0, (Mathf.Min(size.x, size.y) - 1) / 2);
+		initialIslandRadius = Mathf.Clamp(value, -1, (Mathf.Min(size.x, size.y) - 1) / 2);
 	}
 
 	public void Generate()

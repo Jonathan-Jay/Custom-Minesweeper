@@ -60,7 +60,7 @@ public class MSCustomizer : MonoBehaviour
 			// Default values
 			deathAnimDurationField.text = visuals.game.deathAnimDuration.ToString("0.00") + "s";
 			deathAnimDurationField.GetComponent<Image>().color = visuals.game.deathAnimDuration > 0f ? regularInputField : emptyInputField;
-			SetFieldTextContextual(initialRadiusField, visuals.game.initialIslandRadius, 0, regularInputField, emptyInputField);
+			SetFieldTextContextual(initialRadiusField, visuals.game.initialIslandRadius, -1, regularInputField, emptyInputField);
 			SetFieldTextContextual(maxHealthField, visuals.maxMistakes, 1, regularInputField, emptyInputField);
 			sizexText.text = visuals.game.size.x.ToString();
 			sizeyText.text = visuals.game.size.y.ToString();
@@ -76,9 +76,9 @@ public class MSCustomizer : MonoBehaviour
 		if (!gameObject.activeInHierarchy)
 		{
 			gameObject.SetActive(true);
-			visuals.mover.deactivated = true;
+			visuals.hover.mover.deactivated = true;
 			if (visuals.playing)
-				visuals.hover.enabled = false;
+				visuals.hover.SetNoClicks(true);
 			tempSize = visuals.game.size;
 			forceUpdate = false;
 			return;
@@ -87,9 +87,9 @@ public class MSCustomizer : MonoBehaviour
 		visuals.ValidateChanges(tempSize, forceUpdate);
 
 		gameObject.SetActive(false);
-		visuals.mover.deactivated = false;
+		visuals.hover.mover.deactivated = false;
 		if (visuals.playing)
-			visuals.hover.enabled = true;
+			visuals.hover.SetNoClicks(false);
 	}
 
 	public void UpdateBombList()
@@ -150,7 +150,7 @@ public class MSCustomizer : MonoBehaviour
 		if (int.TryParse(value, out int res))
 			visuals.game.SetRadius(res);
 		
-		SetFieldTextContextual(initialRadiusField, visuals.game.initialIslandRadius, 0, regularInputField, emptyInputField);
+		SetFieldTextContextual(initialRadiusField, visuals.game.initialIslandRadius, -1, regularInputField, emptyInputField);
 	}
 
 	public void SetMaxHealth(string value)

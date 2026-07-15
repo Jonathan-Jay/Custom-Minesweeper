@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class MSVisuals : MonoBehaviour
 {
 	public HoverHandler hover;
-	public MSMover mover;
 	public Minesweeper game { get; private set; }
 	public RectTransform boardParent;
 	public Color[] hintColours = { Color.grey };
@@ -45,11 +44,11 @@ public class MSVisuals : MonoBehaviour
 		game.visibilityChanged += Reveal;
 		game.flagChanged += UpdateFlag;
 		game.mistakeMade += CheckMistake;
-		game.firstBreak += (Vector2Int pos) => firstClickText.text = (pos + Vector2Int.one).ToString();
+		game.firstBreak += (Vector2Int pos) => firstClickText.text = (pos + Vector2Int.one) + " r" + game.initialIslandRadius;
 		game.winEvent += () => {
-			if (hover.enabled)
+			if (!hover.noClicks)
 				winRect.gameObject.SetActive(true);
-			hover.enabled = false;
+			hover.SetNoClicks(true);
 			playing = false;
 		};
 	}
@@ -87,9 +86,9 @@ public class MSVisuals : MonoBehaviour
 		board = new NodeGrid<Tile>(game.size);
 
 		boardParent.sizeDelta = tileSize * game.size;
-		mover.currentHeight = Mathf.Max(boardParent.sizeDelta.x, boardParent.sizeDelta.y);
-		mover.movementBounds = boardParent.sizeDelta * 0.5f - Vector2.one * 50f;
-		mover.zoomBounds.x = Mathf.Min(mover.referenceHeight / mover.currentHeight, mover.minimumZoom);
+		hover.mover.currentHeight = Mathf.Max(boardParent.sizeDelta.x, boardParent.sizeDelta.y);
+		hover.mover.movementBounds = boardParent.sizeDelta * 0.5f - Vector2.one * 50f;
+		hover.mover.zoomBounds.x = Mathf.Min(hover.mover.referenceHeight / hover.mover.currentHeight, hover.mover.minimumZoom);
 
 		boardBG.uvRect = new Rect(Vector2.zero, game.size);
 		offset = new Vector2((game.size.x * -0.5f + 0.5f) * tileSize.x, (game.size.y * -0.5f + 0.5f) * tileSize.y);
@@ -164,7 +163,7 @@ public class MSVisuals : MonoBehaviour
 		if (mistakes >= maxMistakes)
 		{
 			loseRect.gameObject.SetActive(true);
-			hover.enabled = false;
+			hover.SetNoClicks(true);
 			playing = false;
 			game.Lose();
 		}
@@ -215,8 +214,8 @@ public class MSVisuals : MonoBehaviour
 
 		mistakes = 0;
 		SetMaxMistakes(maxMistakes);
-		hover.enabled = true;
-		mover.ResetCamera();
+		hover.SetNoClicks(false);
+		hover.mover.ResetCamera();
 		playing = true;
 		DoText();
 		//Random.state = heldState;
