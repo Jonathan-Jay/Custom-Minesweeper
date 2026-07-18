@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 16482733b22a24942b8ec4cf125ca8e0, type: 3}
-  m_Name: CavernSweeper
+  m_Name: Cavern Sweeper
   m_EditorClassIdentifier: Assembly-CSharp::BombCategory
   bombOptions:
   - bomb: {fileID: 11400000, guid: 20bc58f99c5fd524d8acabe392873710, type: 2}

@@ -753,7 +753,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e17fb03081cbef847b9e40df9582db23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BombListItem
-  customizer: {fileID: 0}
+  categoryItem: {fileID: 0}
   bombIcon: {fileID: 5896165892706846321}
   nameText: {fileID: 3697246600009354446}
   countInput: {fileID: 386541855670518767}
@@ -783,7 +783,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
