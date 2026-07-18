@@ -117,12 +117,12 @@ public class PresetLoader : MonoBehaviour
 	{
 		string preset = "";
 
-		if (exportSize)		preset += sizeChar + customizer.tempSize.x + "," + customizer.tempSize.y + ".";
-		if (exportMistakes)	preset += mistakesChar + customizer.visuals.maxMistakes + ".";
-		if (exportRadius)	preset += radiusChar + customizer.visuals.game.initialIslandRadius + ".";
-		if (exportSeed)		preset += seedChar + customizer.visuals.game.seed + ".";
+		if (exportSize)		preset += sizeChar + customizer.tempSize.x.ToString() + "," + customizer.tempSize.y + ".";
+		if (exportMistakes)	preset += mistakesChar + customizer.visuals.maxMistakes.ToString() + ".";
+		if (exportRadius)	preset += radiusChar + customizer.visuals.game.initialIslandRadius.ToString() + ".";
+		if (exportSeed)		preset += seedChar + customizer.visuals.game.seed.ToString() + ".";
 		if (exportFirstClick && !customizer.visuals.game.waitingForClick)
-			preset += firstClickChar + customizer.visuals.game.firstClick.x + "," + customizer.visuals.game.firstClick.y + ".";
+			preset += firstClickChar + customizer.visuals.game.firstClick.x.ToString() + "," + customizer.visuals.game.firstClick.y + ".";
 
 		int c = 0;
 		foreach (BombCategory bombCategory in customizer.visuals.game.bombCategories)
