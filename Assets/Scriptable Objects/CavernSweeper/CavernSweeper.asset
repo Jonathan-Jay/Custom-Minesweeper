@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16482733b22a24942b8ec4cf125ca8e0, type: 3}
+  m_Name: CavernSweeper
+  m_EditorClassIdentifier: Assembly-CSharp::BombCategory
+  bombOptions:
+  - bomb: {fileID: 11400000, guid: 20bc58f99c5fd524d8acabe392873710, type: 2}
+    count: 0
+  - bomb: {fileID: 11400000, guid: a36f918e7c27f74498efa00df2ff8c07, type: 2}
+    count: 0
+  - bomb: {fileID: 11400000, guid: b0e099bca08a5e64997ee4ad13e7b10a, type: 2}
+    count: 0
+  - bomb: {fileID: 11400000, guid: b810eb3392e3b9e44a2e5dc6e4a06147, type: 2}
+    count: 0
+  - bomb: {fileID: 11400000, guid: 6c33e46922d8a484eb114f5615092520, type: 2}
+    count: 0
+  - bomb: {fileID: 11400000, guid: a17574707f214cb4cbf9348828972abe, type: 2}
+    count: 0
+  - bomb: {fileID: 11400000, guid: ebc5df895bbbd5e47962f1373f79c0cc, type: 2}
+    count: 0
+  - bomb: {fileID: 11400000, guid: 7b8628c433f1e934e84c07771fd0660f, type: 2}
+    count: 0
