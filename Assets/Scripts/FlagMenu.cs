@@ -27,20 +27,26 @@ public class FlagMenu : MonoBehaviour
 			Destroy(icon.gameObject);
 		}
 		icons.Clear();
-		icons.Capacity = visuals.game.bombOptions.Count;
-		foreach (var bombPair in visuals.game.bombOptions)
+		int count = 0;
+		foreach (BombCategory bombCategory in visuals.game.bombCategories)
+			count += bombCategory.bombOptions.Count;
+		icons.Capacity = count;
+
+		first.color = faded;
+		icons.Add(first);
+
+		foreach (BombCategory bombCategory in visuals.game.bombCategories)
 		{
-			Image icon = first;
-			if (icons.Count > 0)
+			foreach (BombPair bombPair in bombCategory.bombOptions)
 			{
 				if (bombPair.count == 0)
 					continue;
-				icon = Instantiate(first, transform);
+				Image icon = Instantiate(first, transform);
 				icon.name = bombPair.bomb.name;
 				icon.sprite = bombPair.bomb.sprite;
+				icon.color = faded;
+				icons.Add(icon);
 			}
-			icon.color = faded;
-			icons.Add(icon);
 		}
 
 		Quaternion angle = Quaternion.Euler(0f, 0f, -360f / icons.Count);

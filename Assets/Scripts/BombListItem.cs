@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class BombListItem : MonoBehaviour
 {
-	public MSCustomizer customizer;
+	public BombCategoryItem categoryItem;
 	[SerializeField] Image bombIcon;
 	[SerializeField] TMPro.TMP_Text nameText;
 	[SerializeField] TMPro.TMP_InputField countInput;
@@ -12,15 +12,19 @@ public class BombListItem : MonoBehaviour
 	[SerializeField] TMPro.TMP_Text patternText;
 	[SerializeField] char zeroCharacter = '-';
 
-	Minesweeper.BombPair bombPair;
-	public void SetData(Minesweeper.BombPair newPair)
+	BombPair bombPair;
+	public int GetCount() => bombPair.realCount;
+
+	public void SetData(BombPair newPair)
 	{
 		bombPair = newPair;
 
 		bombIcon.sprite = bombPair.bomb.sprite;
 		nameText.text = bombPair.bomb.name;
-		customizer.SetFieldTextContextual(countInput, bombPair.realCount, 0, customizer.regularInputField, customizer.emptyInputField);
-		customizer.SetFieldTextContextual(damageInput, bombPair.bomb.damage, 0, customizer.negativeInputField, customizer.positiveInputField);
+		categoryItem.customizer.SetFieldTextContextual(countInput, bombPair.realCount, 0,
+				categoryItem.customizer.regularInputField, categoryItem.customizer.emptyInputField);
+		categoryItem.customizer.SetFieldTextContextual(damageInput, bombPair.bomb.damage, 0,
+				categoryItem.customizer.negativeInputField, categoryItem.customizer.positiveInputField);
 		Vector2Int hintSize = bombPair.bomb.GetHintSize();
 		patternBG.uvRect = new Rect(Vector2.zero, hintSize);
 
@@ -51,9 +55,11 @@ public class BombListItem : MonoBehaviour
 
 			bombPair.realCount = Mathf.Max(0, res);
 
-			customizer.ForceUpdate();
+			categoryItem.customizer.ForceUpdate();
+			categoryItem.UpdateCount();
 		}
-		customizer.SetFieldTextContextual(countInput, bombPair.realCount, 0, customizer.regularInputField, customizer.emptyInputField);
+		categoryItem.customizer.SetFieldTextContextual(countInput, bombPair.realCount, 0,
+				categoryItem.customizer.regularInputField, categoryItem.customizer.emptyInputField);
 	}
 
 	public void SetDamage(string value)
@@ -61,6 +67,7 @@ public class BombListItem : MonoBehaviour
 		if (int.TryParse(value, out int res))
 			bombPair.bomb.damage = res;
 
-		customizer.SetFieldTextContextual(damageInput, bombPair.bomb.damage, 0, customizer.negativeInputField, customizer.positiveInputField);
+		categoryItem.customizer.SetFieldTextContextual(damageInput, bombPair.bomb.damage, 0,
+				categoryItem.customizer.negativeInputField, categoryItem.customizer.positiveInputField);
 	}
 }

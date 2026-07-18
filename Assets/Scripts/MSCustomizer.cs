@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +13,8 @@ public class MSCustomizer : MonoBehaviour
 	public Color negativeInputField = Color.red;
 	
 	[SerializeField] RectTransform bombListContent;
+	[SerializeField] BombCategoryItem groupParent;
+	[SerializeField] BombListItem baseItem;
 	[SerializeField] TMPro.TMP_InputField deathAnimDurationField;
 	[SerializeField] TMPro.TMP_InputField initialRadiusField;
 	[SerializeField] TMPro.TMP_InputField maxHealthField;
@@ -19,17 +22,15 @@ public class MSCustomizer : MonoBehaviour
 	[SerializeField] TMPro.TMP_InputField sizexText;
 	[SerializeField] TMPro.TMP_InputField sizeyText;
 
-	Vector2Int tempSize = Vector2Int.zero;
+	[NonSerialized] public Vector2Int tempSize = Vector2Int.zero;
 	bool forceUpdate = false;
+
 	public void ForceUpdate()
 	{
-		foreach (var bombPair in visuals.game.bombOptions)
-		{
-			if (bombPair?.bomb == null)	continue;
-			
-			bombPair.count = bombPair.realCount;
-		}
 		forceUpdate = true;
+		foreach (BombCategory bombCategory in visuals.game.bombCategories)
+			foreach (BombPair bombPair in bombCategory.bombOptions)
+				bombPair.count = bombPair.realCount;
 	}
 
 	void Awake()
@@ -92,7 +93,7 @@ public class MSCustomizer : MonoBehaviour
 
 	public void UpdateBombList()
 	{
-		BombListItem baseItem = bombListContent.GetChild(0).GetComponent<BombListItem>();
+		// child 0 is the preset base
 		while (bombListContent.childCount > 1)
 		{
 			Transform child = bombListContent.GetChild(1);
@@ -100,22 +101,43 @@ public class MSCustomizer : MonoBehaviour
 			Destroy(child.gameObject);
 		}
 		
-		int index = 0;
-		float offset = baseItem.GetComponent<RectTransform>().anchoredPosition.y;
+		float offset = -baseItem.GetComponent<RectTransform>().anchoredPosition.y;
 		float height = baseItem.GetComponent<RectTransform>().sizeDelta.y;
-		foreach (Minesweeper.BombPair bombPair in visuals.game.bombOptions)
+		float combinedHeight = bombListContent.GetChild(0).GetComponent<RectTransform>().sizeDelta.y;
+		foreach (BombCategory bombCategory in visuals.game.bombCategories)
 		{
-			if (bombPair?.bomb == null)	continue;
+			BombCategoryItem curCategory = Instantiate(groupParent, bombListContent);
+			curCategory.customizer = this;
+			curCategory.nameText.text = bombCategory.name;
+			curCategory.scrollContent = bombListContent;
+			curCategory.contents = new BombListItem[bombCategory.Count];
 
-			BombListItem item = baseItem;
-			if (index != 0)
-				item = Instantiate(baseItem, bombListContent);
+			RectTransform curParent = curCategory.GetComponent<RectTransform>();
+			curParent.anchoredPosition = Vector2.down * (combinedHeight + curParent.sizeDelta.y * 0.5f);
+
+			int index = 0;
+			foreach (BombPair bombPair in bombCategory.bombOptions)
+			{
+				BombListItem item = Instantiate(baseItem, curParent);
+				item.categoryItem = curCategory;
+				item.GetComponent<RectTransform>().anchoredPosition = Vector2.down * (offset * (index + 1) + height * index * 0.5f);
+				item.SetData(bombPair);
+				curCategory.contents[index] = item;
+				++index;
+			}
 			
-			item.GetComponent<RectTransform>().anchoredPosition = Vector2.up * (offset * (index + 1) + height * index * -0.5f);
-			item.SetData(bombPair);
-			++index;
+			curCategory.UpdateCount();
+			if (curCategory.activeText.text == "")
+				curCategory.GetComponent<Toggle>().isOn = false;
+			
+			curCategory.height = offset * (index + 1) + height * (index - 1) * 0.5f;
+			
+			combinedHeight += curParent.sizeDelta.y;
+			if (curCategory.activeText.text != "")
+			 	combinedHeight += curCategory.height;
+
 		}
-		bombListContent.sizeDelta = Vector2.down * (offset * (index + 1) + height * (index - 1) * -0.5f);
+		bombListContent.sizeDelta = Vector2.up * combinedHeight;
 	}
 
 	public void SetXSize(string value)

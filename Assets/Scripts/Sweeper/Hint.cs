@@ -1,4 +1,6 @@
 using System;
+using System.Numerics;
+using UnityEngine;
 
 [Serializable]
 public class Hint : INode
@@ -21,8 +23,8 @@ public class Hint : INode
 	}
 	public int actualValue;
 	//Use negative values for found mines
-	public int flagValue = 0;
-	public int bomb = 0;
+	public Vector2Int flagValue = Vector2Int.left;
+	public Vector2Int bomb = Vector2Int.left;
 	public TileStatus status {get; private set;} = TileStatus.Closed;
 	public event Action valueChanged;
 
@@ -45,8 +47,8 @@ public class Hint : INode
 	{
 		actualValue = 0;
 		_displayValue = 0;
-		flagValue = 0;
-		bomb = 0;
+		flagValue = Vector2Int.left;
+		bomb = Vector2Int.left;
 		status = TileStatus.Closed;
 	}
 }

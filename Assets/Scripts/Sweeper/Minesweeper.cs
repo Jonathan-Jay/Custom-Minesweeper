@@ -10,21 +10,11 @@ using URandom = UnityEngine.Random;
 
 public class Minesweeper : MonoBehaviour
 {
-	[Serializable]
-	public class BombPair
-	{
-		public Bomb bomb;
-		public int count = 0;
-		[NonSerialized] public int realCount = -1;
-
-		[NonSerialized] public int flagCount = 0;
-	}
-
 	public int seed;
 
 	public int initialIslandRadius = 2;
 	public Vector2Int size = Vector2Int.one * 10;
-	public List<BombPair> bombOptions;
+	public List<BombCategory> bombCategories;
 	NodeGrid<Hint> hintGrid;
 	NodeGrid<bool> visibleGrid;
 
@@ -61,13 +51,14 @@ public class Minesweeper : MonoBehaviour
 
 	void Awake()
 	{
-		foreach (BombPair bombPair in bombOptions)
+		foreach(BombCategory bombCategory in bombCategories)
 		{
-			if (bombPair?.bomb == null) continue;
-			bombPair.flagCount = 0;
-			bombPair.realCount = bombPair.count;
+			foreach (BombPair bombPair in bombCategory.bombOptions)
+			{
+				bombPair.flagCount = 0;
+				bombPair.realCount = bombPair.count;
+			}
 		}
-		bombOptions.Insert(0, null);
 		
 		SetRadius(initialIslandRadius);
 		Vector2Int newSize = size;
@@ -104,10 +95,12 @@ public class Minesweeper : MonoBehaviour
 		totalTileCount = size.x * size.y;
 
 		bombCount = 0;
-		foreach (BombPair bombPair in bombOptions)
+		foreach (BombCategory bombCategory in bombCategories)
 		{
-			if (bombPair?.bomb == null) continue;
-			bombCount += bombPair.realCount;
+			foreach (BombPair bombPair in bombCategory.bombOptions)
+			{
+				bombCount += bombPair.realCount;
+			}
 		}
 
 		SetRadius(initialIslandRadius);
@@ -144,26 +137,27 @@ public class Minesweeper : MonoBehaviour
 		totalTileCount = size.x * size.y - radius;
 
 		bombCount = 0;
-		foreach (BombPair bombPair in bombOptions)
+		foreach (BombCategory bombCategory in bombCategories)
 		{
-			if (bombPair?.bomb == null)	continue;
-
-			bombPair.flagCount = 0;
-			bombPair.count = bombPair.realCount;
-
-			bombCount += bombPair.count;
-			if (bombCount > totalTileCount)
+			foreach (BombPair bombPair in bombCategory.bombOptions)
 			{
-				bombCount -= bombPair.count;
-				bombPair.count = totalTileCount - bombCount;
+				bombPair.flagCount = 0;
+				bombPair.count = bombPair.realCount;
+
 				bombCount += bombPair.count;
-			}
+				if (bombCount > totalTileCount)
+				{
+					bombCount -= bombPair.count;
+					bombPair.count = totalTileCount - bombCount;
+					bombCount += bombPair.count;
+				}
 
-			for (int c = 0; c < bombPair.count;)
-			{
-				Vector2Int newPos = GetPos(bombPair.bomb);
-				if (AddBomb(bombPair.bomb, newPos))
-					++c;
+				for (int c = 0; c < bombPair.count;)
+				{
+					Vector2Int newPos = GetPos(bombPair.bomb);
+					if (AddBomb(bombPair.bomb, newPos))
+						++c;
+				}
 			}
 		}
 		totalTileCount += radius - bombCount;
@@ -208,7 +202,7 @@ public class Minesweeper : MonoBehaviour
 			firstBreak?.Invoke(pos);
 		}
 
-		if (visibleGrid.GetCell(pos) || GetHint(pos).flagValue > 0)
+		if (visibleGrid.GetCell(pos) || GetHint(pos).flagValue != Vector2Int.left)
 			return;
 
 		Hint hint = GetHint(pos);
@@ -217,7 +211,7 @@ public class Minesweeper : MonoBehaviour
 		OpenCell(pos, hint);
 
 		Queue<Tuple<Vector2Int, bool>> scanPoses = new Queue<Tuple<Vector2Int, bool>>();
-		scanPoses.Enqueue(new Tuple<Vector2Int, bool>(pos, hint.actualValue != 0 || hint.flagValue < 0));
+		scanPoses.Enqueue(new Tuple<Vector2Int, bool>(pos, hint.actualValue != 0 || hint.flagValue != Vector2Int.left));
 
 		StartCoroutine(BreakChainCoroutine(scanPoses));
 	}
@@ -235,11 +229,11 @@ public class Minesweeper : MonoBehaviour
 			{
 				Hint hint = GetHint(offset);
 
-				if (offset == pos || visibleGrid.GetCell(offset) || hint.flagValue > 0)
+				if (offset == pos || visibleGrid.GetCell(offset) || hint.flagValue != Vector2Int.left)
 					continue;
 
 				OpenCell(offset, hint);
-				scanPoses.Enqueue(new Tuple<Vector2Int, bool>(offset, hint.actualValue != 0 || hint.flagValue < 0));
+				scanPoses.Enqueue(new Tuple<Vector2Int, bool>(offset, hint.actualValue != 0 || hint.flagValue != Vector2Int.left));
 			}
 		}
 
@@ -257,8 +251,9 @@ public class Minesweeper : MonoBehaviour
 			mistakes += 1;
 
 			//guaranteed flags are marked with negative values
-			hint.flagValue = -hint.bomb;
-			BombPair bomb = bombOptions[hint.bomb];
+			hint.flagValue = hint.bomb;
+			hint.flagValue.y = -hint.flagValue.y;
+			BombPair bomb = bombCategories[hint.bomb.x][hint.bomb.y];
 			bomb.flagCount += 1;
 			bomb.bomb.UpdateHints(pos, hintGrid, true, -1);
 			flagChanged?.Invoke(pos);
@@ -310,7 +305,7 @@ public class Minesweeper : MonoBehaviour
 					if (offset.x == cur.Item1.x || offset.y == cur.Item1.y)
 						hint.SetStatus(Hint.TileStatus.Neighbouring, true);
 
-					if (cur.Item2 || hint.flagValue > 0 || bombList.ContainsKey(offset))
+					if (cur.Item2 || hint.flagValue != Vector2Int.left || bombList.ContainsKey(offset))
 						continue;
 
 					openedTile = true;
@@ -359,7 +354,7 @@ public class Minesweeper : MonoBehaviour
 			Hint hint = GetHint(pos);
 
 			// Skip already opened bombs
-			if (hint.flagValue < 0)	continue;
+			if (hint.flagValue != Vector2Int.left && hint.flagValue.y < 0)	continue;
 			
 			if (animated)
 				yield return wait;
@@ -368,12 +363,13 @@ public class Minesweeper : MonoBehaviour
 			hint.SetStatus(Hint.TileStatus.Open);
 			visibilityChanged?.Invoke(pos);
 
-			if (hint.flagValue > 0)
-				bombOptions[hint.flagValue].bomb.UpdateHints(pos, hintGrid, true, 1);
+			if (hint.flagValue != Vector2Int.left)
+				bombCategories[hint.flagValue.x][hint.flagValue.y].bomb.UpdateHints(pos, hintGrid, true, 1);
 
 			//guaranteed flags are marked with negative values
-			hint.flagValue = -hint.bomb;
-			BombPair bomb = bombOptions[hint.bomb];
+			hint.flagValue = hint.bomb;
+			hint.flagValue.y = -hint.flagValue.y;
+			BombPair bomb = bombCategories[hint.bomb.x][hint.bomb.y];
 			bomb.bomb.UpdateHints(pos, hintGrid, true, -1);
 			flagChanged?.Invoke(pos);
 		}
@@ -383,26 +379,26 @@ public class Minesweeper : MonoBehaviour
 
 	public void ClearFlag(Vector2Int pos)
 	{
-		SetFlag(pos, 0);
+		SetFlag(pos, Vector2Int.left);
 	}
 
-	public void SetFlag(Vector2Int pos, int index)
+	public void SetFlag(Vector2Int pos, Vector2Int index)
 	{
 		if ((visibleGrid.GetCell(pos) && !bombList.ContainsKey(pos)) || waitingForClick) return;
 
 		Hint hint = GetHint(pos);
-		if (hint.flagValue < 0) return;
+		if (hint.flagValue != Vector2Int.left && hint.flagValue.y < 0) return;
 
-		if (hint.flagValue != 0)
+		if (hint.flagValue != Vector2Int.left)
 		{
-			bombOptions[hint.flagValue].flagCount -= 1;
-			bombOptions[hint.flagValue].bomb.UpdateHints(pos, hintGrid, true, 1);
+			bombCategories[hint.flagValue.x][hint.flagValue.y].flagCount -= 1;
+			bombCategories[hint.flagValue.x][hint.flagValue.y].bomb.UpdateHints(pos, hintGrid, true, 1);
 		}
 		hint.flagValue = index;
-		if (hint.flagValue != 0)
+		if (hint.flagValue != Vector2Int.left)
 		{
-			bombOptions[hint.flagValue].flagCount += 1;
-			bombOptions[hint.flagValue].bomb.UpdateHints(pos, hintGrid, true, -1);
+			bombCategories[hint.flagValue.x][hint.flagValue.y].flagCount += 1;
+			bombCategories[hint.flagValue.x][hint.flagValue.y].bomb.UpdateHints(pos, hintGrid, true, -1);
 		}
 
 		flagChanged?.Invoke(pos);
@@ -413,17 +409,20 @@ public class Minesweeper : MonoBehaviour
 		return hintGrid.GetCell(pos);
 	}
 
-	public int GetBombIndex(Bomb bomb)
+	public Vector2Int GetBombIndex(Bomb bomb)
 	{
-		for (int i = 1; i < bombOptions.Count; ++i)
-			if (bombOptions[i].bomb == bomb)
-				return i;
-		return 0;
+		for (int c = 0; c < bombCategories.Count; ++c)
+			for (int i = 0; i < bombCategories[c].Count; ++i)
+				if (bombCategories[c][i].bomb == bomb)
+					return new Vector2Int(c, i);
+		return Vector2Int.left;
 	}
 
 	public Sprite GetFlag(Vector2Int pos)
 	{
-		return bombOptions[Mathf.Abs(GetHint(pos).flagValue)]?.bomb?.sprite;
+		Hint hint = GetHint(pos);
+		if (hint.flagValue == Vector2Int.left)	return null;
+		return bombCategories[hint.flagValue.x][Mathf.Abs(hint.flagValue.y)].bomb.sprite;
 	}
 
 	bool InBounds(Vector2Int pos, Vector2Int minBounds, Vector2Int maxBounds)
@@ -449,7 +448,7 @@ public class Minesweeper : MonoBehaviour
 		if (!bombList.ContainsKey(pos))
 			return false;
 
-		GetHint(pos).bomb = 0;
+		GetHint(pos).bomb = Vector2Int.left;
 
 		bombList[pos].UpdateHints(pos, hintGrid, false, -1);
 		bombList.Remove(pos);

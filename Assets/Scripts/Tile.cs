@@ -62,7 +62,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 		flag.gameObject.SetActive(false);
 		tile.gameObject.SetActive(true);
 		//rect.sizeDelta = visuals.tileSize;
-		if (hasValue || (!visuals.noHintsOverBombs && hint.flagValue != 0))
+		if (hasValue || (!visuals.noHintsOverBombs && hint.flagValue != Vector2Int.left))
 			hint.valueChanged -= UpdateText;
 		
 		text.text = "";
@@ -85,7 +85,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 			//rect.sizeDelta = Vector2.zero;
 		}
 
-		if (hint.bomb != 0 || hint.flagValue != 0)	return;
+		if (hint.bomb != Vector2Int.left || hint.flagValue != Vector2Int.left)	return;
 
 		if (!hasValue)
 			hint.valueChanged += UpdateText;
@@ -125,7 +125,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 			return;
 		}
 		
-		if (hint.actualValue == 0 && !(visuals.useFlags && hint.displayValue != 0) && hint.flagValue == 0)
+		if (hint.actualValue == 0 && !(visuals.useFlags && hint.displayValue != 0) && hint.flagValue == Vector2Int.left)
 		{
 			text.text = "";
 			return;

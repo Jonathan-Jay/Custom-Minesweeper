@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,6 +9,8 @@ public class MSVisuals : MonoBehaviour
 	public HoverHandler hover;
 	public Minesweeper game { get; private set; }
 	public RectTransform boardParent;
+	public RawImage boardCover;
+	public Image clickPoint;
 	public Color[] hintColours = { Color.grey };
 	public Color mysteryColour = Color.mediumPurple;
 
@@ -19,7 +22,7 @@ public class MSVisuals : MonoBehaviour
 	public bool useFlags {get; private set;} = false;
 	//public bool playing {get; private set;} = false;
 	[NonSerialized] public bool tileFlagged = true;
-	public int defaultFlag { get; private set;} = 0;
+	public Vector2Int defaultFlag { get; private set;} = Vector2Int.left;
 	public event Action<int> seedUpdated;
 	public event Action bombListUpdated;
 	public Vector2 tileSize {get; private set;} = Vector2.zero;
@@ -35,8 +38,7 @@ public class MSVisuals : MonoBehaviour
 	[SerializeField] RectTransform loseRect;
 
 	NodeGrid<Tile> board = null;
-	List<int> activeFlagList;
-	RawImage boardBG = null;
+	List<Vector2Int> activeFlagList;
 
 	void Awake()
 	{
@@ -55,10 +57,15 @@ public class MSVisuals : MonoBehaviour
 
 	void Start()
 	{
-		activeFlagList = new List<int>(game.bombOptions.Count);
-
-		boardBG = boardParent.GetComponent<RawImage>();
+		int count = 0;
+		foreach (BombCategory bombCategory in game.bombCategories)
+			count += bombCategory.Count;
+		activeFlagList = new List<Vector2Int>(count);
 		tileSize = tileTemplate.GetComponent<RectTransform>().sizeDelta;
+		clickPoint.GetComponent<RectTransform>().sizeDelta = tileSize;
+
+		boardCover.gameObject.SetActive(false);
+		clickPoint.gameObject.SetActive(false);
 		
 		hover.callbackL = game.Click;
 		hover.callbackR = SetFlag;
@@ -80,20 +87,20 @@ public class MSVisuals : MonoBehaviour
 		
 		if (board?.linearGrid != null)
 		{
-			foreach (var tile in board.linearGrid)
+			foreach (Tile tile in board.linearGrid)
 				Destroy(tile.gameObject);
 		}
 		board = new NodeGrid<Tile>(game.size);
 
+		boardCover.uvRect = new Rect(Vector2.zero, game.size);
 		boardParent.sizeDelta = tileSize * game.size;
+		boardParent.GetComponent<RawImage>().uvRect = boardCover.uvRect;
+
 		hover.mover.currentHeight = Mathf.Max(boardParent.sizeDelta.x, boardParent.sizeDelta.y);
 		hover.mover.movementBounds = boardParent.sizeDelta * 0.5f - Vector2.one * 50f;
 		hover.mover.zoomBounds.x = Mathf.Min(hover.mover.referenceHeight / hover.mover.currentHeight, hover.mover.minimumZoom);
 
-		boardBG.uvRect = new Rect(Vector2.zero, game.size);
 		offset = new Vector2((game.size.x * -0.5f + 0.5f) * tileSize.x, (game.size.y * -0.5f + 0.5f) * tileSize.y);
-
-
 
 		Vector2Int pos = Vector2Int.zero;
 		for (pos.x = 0; pos.x < game.size.x; ++pos.x)
@@ -109,6 +116,9 @@ public class MSVisuals : MonoBehaviour
 				board.SetCell(pos, tile);
 			}
 		}
+
+		boardCover.transform.SetAsLastSibling();
+		clickPoint.transform.SetAsLastSibling();
 	}
 
 	public void ValidateChanges(Vector2Int newSize, bool forceUpdate)
@@ -142,11 +152,14 @@ public class MSVisuals : MonoBehaviour
 	public void SetMaxMistakes(int value)
 	{
 		int max = 0;
-		foreach (Minesweeper.BombPair bombPair in game.bombOptions)
+		foreach (BombCategory bombCategory in game.bombCategories)
 		{
-			if (bombPair?.bomb == null || bombPair?.bomb.damage <= 0) continue;
+			foreach (BombPair bombPair in bombCategory.bombOptions)
+			{
+				if (bombPair.bomb.damage <= 0) continue;
 
-			max += bombPair.count * bombPair.bomb.damage;
+				max += bombPair.count * bombPair.bomb.damage;
+			}
 		}
 
 		maxMistakes = Mathf.Min(Mathf.Max(value, 1), Mathf.Max(max, 1));
@@ -172,13 +185,29 @@ public class MSVisuals : MonoBehaviour
 
 	public void SetupGameSameBreak()
 	{
-		if (game.waitingForClick || game.animating)	return;
+		if (game.waitingForClick)	return;
 
-		Vector2Int pos = game.firstClick;
+		SetupGameSpecificBreak(game.firstClick);
+	}
+
+	public void SetupGameSpecificBreak(Vector2Int pos)
+	{
+		if (game.animating)	return;
 
 		SetupGame(false);
 
-		game.Click(pos);
+		//makes it require a player click instead
+		if (clickPoint)
+		{
+			clickPoint.gameObject.SetActive(true);
+			boardCover.gameObject.SetActive(true);
+			clickPoint.GetComponent<RectTransform>().anchoredPosition = tileSize * (pos + Vector2.one * 0.5f);
+			boardCover.uvRect = new Rect(-pos, game.size);
+			
+			StartCoroutine(RainbowClickPoint());
+		}
+		else
+			game.Click(pos);
 	}
 
 	public void SetupGame(bool newSeed)
@@ -204,11 +233,14 @@ public class MSVisuals : MonoBehaviour
 		seedUpdated?.Invoke(game.seed);
 		bombListUpdated?.Invoke();
 		activeFlagList.Clear();
-		activeFlagList.Add(0);
-		for (int i = 0; i < game.bombOptions.Count; ++i)
+		activeFlagList.Add(Vector2Int.left);
+		for (int c = 0; c < game.bombCategories.Count; ++c)
 		{
-			if (game.bombOptions[i]?.count > 0)
-				activeFlagList.Add(i);
+			for (int i = 0; i < game.bombCategories[c].Count; ++i)
+			{
+				if (game.bombCategories[c][i].count > 0)
+					activeFlagList.Add(new Vector2Int(c, i));
+			}
 		}
 		SetDefaultFlag(0);
 
@@ -221,18 +253,37 @@ public class MSVisuals : MonoBehaviour
 		//Random.state = heldState;
 	}
 
+	public void ClickPoint()
+	{
+		clickPoint.gameObject.SetActive(false);
+		boardCover.gameObject.SetActive(false);
+		game.Click(new Vector2Int(-Mathf.RoundToInt(boardCover.uvRect.position.x), -Mathf.RoundToInt(boardCover.uvRect.position.y)));
+	}
+
+	IEnumerator RainbowClickPoint()
+	{
+		float t = 0;
+		while (clickPoint.gameObject.activeInHierarchy)
+		{
+			clickPoint.color = Color.Lerp(Color.white, Color.limeGreen, Mathf.Abs(t - 1f));
+			yield return null;
+			t = Mathf.Repeat(t + Time.unscaledDeltaTime, 2f);
+		}
+	}
+
 	public void SetDefaultFlag(int val)
 	{
 		defaultFlag = activeFlagList[Mathf.Clamp(val, 0, activeFlagList.Count - 1)];
-		defaultFlagImage.sprite = game.bombOptions[defaultFlag]?.bomb?.sprite;
-		defaultFlagImage.gameObject.SetActive(defaultFlag != 0);
+		if (defaultFlag == Vector2Int.left)	defaultFlagImage.sprite = null;
+		else	defaultFlagImage.sprite = game.bombCategories[defaultFlag.x][defaultFlag.y].bomb.sprite;
+		defaultFlagImage.gameObject.SetActive(defaultFlag != Vector2Int.left);
 	}
 
 	public void SetFlag(Vector2Int pos)
 	{
-		int value = defaultFlag;
+		Vector2Int value = defaultFlag;
 		Tile tile = board.GetCell(pos);
-		if (tileFlagged || value == 0 || value == tile.hint.flagValue)
+		if (tileFlagged || value == Vector2Int.left || value == tile.hint.flagValue)
 			value = activeFlagList[(activeFlagList.IndexOf(tile.hint.flagValue) + 1) % activeFlagList.Count];
 		tileFlagged = true;
 		game.SetFlag(pos, value);
@@ -246,7 +297,7 @@ public class MSVisuals : MonoBehaviour
 		foreach (Tile tile in board.linearGrid)
 		{
 			//for any flags in general
-			if (tile.hint.flagValue != 0)
+			if (tile.hint.flagValue != Vector2Int.left)
 				tile.FlagText(true);
 		}
 	}
@@ -258,7 +309,7 @@ public class MSVisuals : MonoBehaviour
 		useFlags = option;
 		foreach (Tile tile in board.linearGrid)
 		{
-			if (!noHintsOverBombs && tile.hint.flagValue != 0)
+			if (!noHintsOverBombs && tile.hint.flagValue != Vector2Int.left)
 				tile.FlagText();
 			else if (tile.hasValue)
 				tile.UpdateText();
@@ -284,15 +335,17 @@ public class MSVisuals : MonoBehaviour
 		text.text = "HP: " + (maxMistakes - mistakes) + "/" + maxMistakes + " <sprite=\"BGTile\" index=0>: " + game.tileCount;
 
 		/* Render default flag in the hud
-		Bomb bomb = game.bombOptions[defaultFlag]?.bomb;
+		Bomb bomb = defaultFlag game.bombCategory[defaultFlag.x][defaultFlag.y].bomb;
 		if (bomb)
 			text.text += " ><sprite=\"" + bomb.sprite.name + "\" index=0><";
 		//*/
 
-		foreach (int index in activeFlagList)
+		foreach (Vector2Int index in activeFlagList)
 		{
-			var bombPair = game.bombOptions[index];
-			if (bombPair?.bomb == null || bombPair?.count == 0)	continue;
+			if (index == Vector2Int.left)	continue;
+			
+			BombPair bombPair = game.bombCategories[index.x][index.y];
+			if (bombPair.count == 0)	continue;
 			
 			text.text += " - <sprite=\"" + bombPair.bomb.sprite.name + "\" index=0>: <color=";
 			switch (bombPair.count - bombPair.flagCount)
