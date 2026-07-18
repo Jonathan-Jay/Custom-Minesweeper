@@ -6,8 +6,9 @@ public class FlagMenu : MonoBehaviour
 {
 	[SerializeField] MSVisuals visuals;
 	[SerializeField] List<Image> icons;
-	[SerializeField] float scaledRadius = 25f;
+	[SerializeField] float scaledRadius = 20f;
 	[SerializeField] float minimumRadius = 75f;
+	[SerializeField] float maximumRadius = 300f;
 	[SerializeField] Color faded = new Color(1f, 1f, 1f, 0.5f);
 
 	RectTransform rect;
@@ -53,7 +54,8 @@ public class FlagMenu : MonoBehaviour
 		Quaternion rot = Quaternion.identity;
 		foreach (Image icon in icons)
 		{
-			icon.GetComponent<RectTransform>().anchoredPosition = rot * (Vector2.up * Mathf.Max(minimumRadius, scaledRadius * (icons.Count - 1)));
+			icon.GetComponent<RectTransform>().anchoredPosition = rot * (Vector2.up * Mathf.Clamp(
+					scaledRadius * (icons.Count - 1), minimumRadius, maximumRadius));
 			rot *= angle;
 		}
 	}
