@@ -24,7 +24,7 @@ public class Hint : INode
 	public int actualValue;
 	//Use negative values for found mines
 	public Vector2Int flagValue = Vector2Int.left;
-	public Vector2Int bomb = Vector2Int.left;
+	public Vector3Int bomb = Vector3Int.left;
 	public TileStatus status {get; private set;} = TileStatus.Closed;
 	public event Action valueChanged;
 
@@ -48,7 +48,7 @@ public class Hint : INode
 		actualValue = 0;
 		_displayValue = 0;
 		flagValue = Vector2Int.left;
-		bomb = Vector2Int.left;
+		bomb = Vector3Int.left;
 		status = TileStatus.Closed;
 	}
 }

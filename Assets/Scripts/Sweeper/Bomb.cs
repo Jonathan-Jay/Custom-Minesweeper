@@ -1,15 +1,34 @@
 using UnityEngine;
 
+using Random = System.Random;
+
 [CreateAssetMenu(fileName = "Bomb", menuName = "Bomb")]
 public class Bomb : ScriptableObject, INode
 {
-	public Sprite sprite;
+	Bomb() => sprite = new Sprite[1];
+	
+	public Sprite[] sprite;
 	public int damage = 1;
 	[SerializeField] Vector2Int offset = new Vector2Int(1, 1);
 	public Vector2Int GetOffset() => offset;
 	[SerializeField] Vector2Int hintSize = new Vector2Int(3, 3);
 	public Vector2Int GetHintSize() => hintSize;
 	[SerializeField] int[] hintGrid = {1, 1, 1, 1, 0, 1, 1, 1, 1};
+	
+
+	public virtual int GetBombCount() => 1;
+
+	// z pos stores the sprite index
+	public virtual Vector3Int GetPos(Vector2Int size, Random random)
+	{
+		return new Vector3Int(random.Next(0, size.x), random.Next(0, size.y), 0);
+	}
+
+	// z pos stores the sprite index
+	public virtual Vector3Int[] GetMultiPos(Vector2Int size, Random random)
+	{
+		return null;
+	}
 
 	public void UpdateHints(Vector2Int bombPos, NodeGrid<Hint> gameHintGrid, bool flag, int multiplier)
 	{
@@ -31,11 +50,11 @@ public class Bomb : ScriptableObject, INode
 		}
 	}
 
-	public string GetHintVisual(Vector2Int pos)
+	public string GetHintVisual(Vector3Int pos)
 	{
 		if (pos.x < 0 || pos.y < 0 || pos.x >= hintSize.x || pos.y >= hintSize.y)	return "0";
-		if (pos == offset)
-			return "<sprite=\"" + sprite.name + "\" index=0>";
+		if ((Vector2Int)pos == offset)
+			return "<sprite=\"" + sprite[pos.z].name + "\" index=0>";
 		return hintGrid[pos.x + hintSize.x * pos.y].ToString();
 	}
 }

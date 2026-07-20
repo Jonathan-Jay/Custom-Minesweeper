@@ -44,7 +44,7 @@ public class FlagMenu : MonoBehaviour
 					continue;
 				Image icon = Instantiate(first, transform);
 				icon.name = bombPair.bomb.name;
-				icon.sprite = bombPair.bomb.sprite;
+				icon.sprite = bombPair.bomb.sprite[0];
 				icon.color = faded;
 				icons.Add(icon);
 			}

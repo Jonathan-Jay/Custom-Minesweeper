@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97f7073ff013af34dbaa955d5011beb5, type: 3}
   m_Name: Slime1
   m_EditorClassIdentifier: Assembly-CSharp::Bomb
-  sprite: {fileID: 21300000, guid: 06951c2237361834caefd7e65bfb587a, type: 3}
+  sprite:
+  - {fileID: 21300000, guid: 06951c2237361834caefd7e65bfb587a, type: 3}
   damage: 1
   offset: {x: 1, y: 1}
   hintSize: {x: 3, y: 3}

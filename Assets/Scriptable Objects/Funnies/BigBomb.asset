@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97f7073ff013af34dbaa955d5011beb5, type: 3}
   m_Name: BigBomb
   m_EditorClassIdentifier: Assembly-CSharp::Bomb
-  sprite: {fileID: 21300000, guid: 360a93b30ecc4ba4eb88b8386ac5f94f, type: 3}
+  sprite:
+  - {fileID: 21300000, guid: 360a93b30ecc4ba4eb88b8386ac5f94f, type: 3}
   damage: 5
   offset: {x: 2, y: 2}
   hintSize: {x: 5, y: 5}

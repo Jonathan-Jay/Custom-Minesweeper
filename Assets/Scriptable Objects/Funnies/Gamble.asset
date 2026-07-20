@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97f7073ff013af34dbaa955d5011beb5, type: 3}
   m_Name: Gamble
   m_EditorClassIdentifier: Assembly-CSharp::Bomb
-  sprite: {fileID: 21300000, guid: 8d851e0124e584b46aa6adde093f8618, type: 3}
+  sprite:
+  - {fileID: 21300000, guid: 8d851e0124e584b46aa6adde093f8618, type: 3}
   damage: -1
   offset: {x: 1, y: 1}
   hintSize: {x: 3, y: 3}

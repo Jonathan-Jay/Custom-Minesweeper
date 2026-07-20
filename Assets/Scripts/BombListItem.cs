@@ -19,7 +19,7 @@ public class BombListItem : MonoBehaviour
 	{
 		bombPair = newPair;
 
-		bombIcon.sprite = bombPair.bomb.sprite;
+		bombIcon.sprite = bombPair.bomb.sprite[0];
 		nameText.text = bombPair.bomb.name;
 		categoryItem.customizer.SetFieldTextContextual(countInput, bombPair.realCount, 0,
 				categoryItem.customizer.regularInputField, categoryItem.customizer.emptyInputField);
@@ -34,7 +34,7 @@ public class BombListItem : MonoBehaviour
 		{
 			for (hintPos.x = 0; hintPos.x < hintSize.x; ++hintPos.x)
 			{
-				string text = bombPair.bomb.GetHintVisual(hintPos);
+				string text = bombPair.bomb.GetHintVisual(new Vector3Int(hintPos.x, hintPos.y, 0));
 				if (text.Length == 1 || text[0] == '<')
 					patternText.text += text == "0" ? zeroCharacter : text;
 				else

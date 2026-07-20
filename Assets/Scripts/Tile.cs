@@ -85,7 +85,7 @@ public class Tile : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 			//rect.sizeDelta = Vector2.zero;
 		}
 
-		if (hint.bomb != Vector2Int.left || hint.flagValue != Vector2Int.left)	return;
+		if (hint.bomb != Vector3Int.left || hint.flagValue != Vector2Int.left)	return;
 
 		if (!hasValue)
 			hint.valueChanged += UpdateText;

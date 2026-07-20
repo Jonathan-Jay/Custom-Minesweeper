@@ -275,7 +275,7 @@ public class MSVisuals : MonoBehaviour
 	{
 		defaultFlag = activeFlagList[Mathf.Clamp(val, 0, activeFlagList.Count - 1)];
 		if (defaultFlag == Vector2Int.left)	defaultFlagImage.sprite = null;
-		else	defaultFlagImage.sprite = game.bombCategories[defaultFlag.x][defaultFlag.y].bomb.sprite;
+		else	defaultFlagImage.sprite = game.bombCategories[defaultFlag.x][defaultFlag.y].bomb.sprite[0];
 		defaultFlagImage.gameObject.SetActive(defaultFlag != Vector2Int.left);
 	}
 
@@ -347,7 +347,7 @@ public class MSVisuals : MonoBehaviour
 			BombPair bombPair = game.bombCategories[index.x][index.y];
 			if (bombPair.count == 0)	continue;
 			
-			text.text += " - <sprite=\"" + bombPair.bomb.sprite.name + "\" index=0>: <color=";
+			text.text += " - <sprite=\"" + bombPair.bomb.sprite[0].name + "\" index=0>: <color=";
 			switch (bombPair.count - bombPair.flagCount)
 			{
 				case > 0:
