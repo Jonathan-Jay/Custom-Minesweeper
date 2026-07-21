@@ -1,13 +1,16 @@
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(Bomb))]
-public class BombEditor : Editor
+[CustomEditor(typeof(NeighbourBomb))]
+public class NeighbourBombEditor : Editor
 {
 	SerializedProperty hintGrid;
 	SerializedProperty hintSize;
 	SerializedProperty offsetProp;
-	SerializedProperty spriteProp;
+	SerializedProperty rightSpriteProp;
+	SerializedProperty downSpriteProp;
+	SerializedProperty leftSpriteProp;
+	SerializedProperty upSpriteProp;
 	SerializedProperty damageProp;
 	Vector2Int size;
 	Vector2Int offset;
@@ -17,7 +20,10 @@ public class BombEditor : Editor
 		hintGrid = this.serializedObject.FindProperty("hintGrid");
 		hintSize = this.serializedObject.FindProperty("hintSize");
 		offsetProp = this.serializedObject.FindProperty("offset");
-		spriteProp = this.serializedObject.FindProperty("sprite").GetArrayElementAtIndex(0);
+		rightSpriteProp = this.serializedObject.FindProperty("sprite").GetArrayElementAtIndex(0);
+		downSpriteProp = this.serializedObject.FindProperty("sprite").GetArrayElementAtIndex(1);
+		leftSpriteProp = this.serializedObject.FindProperty("sprite").GetArrayElementAtIndex(2);
+		upSpriteProp = this.serializedObject.FindProperty("sprite").GetArrayElementAtIndex(3);
 		damageProp = this.serializedObject.FindProperty("damage");
 		size = hintSize.vector2IntValue;
 	}
@@ -31,7 +37,21 @@ public class BombEditor : Editor
 		GUIStyle style = new GUIStyle(GUI.skin.label) {alignment = TextAnchor.MiddleCenter};
 		GUIStyle cellStyle = new GUIStyle(GUI.skin.textField) {alignment = TextAnchor.MiddleCenter};
 
-		EditorGUILayout.PropertyField(spriteProp, new GUIContent("Sprite"));
+		EditorGUILayout.LabelField("Sprites", style);
+		EditorGUILayout.PropertyField(rightSpriteProp, new GUIContent("Right"));
+		EditorGUILayout.PropertyField(downSpriteProp, new GUIContent("Down"));
+		EditorGUILayout.PropertyField(leftSpriteProp, new GUIContent("Left"));
+		EditorGUILayout.PropertyField(upSpriteProp, new GUIContent("Up"));
+		EditorGUILayout.LabelField("Bombs default to facing each other (left faces right)");
+		EditorGUILayout.LabelField("These bombs spawn besides each other");
+		EditorGUILayout.Space();
+
+		EditorGUILayout.LabelField("WARNING!", style);
+		EditorGUILayout.LabelField("Put multibombs at the start of bomb lists", style);
+		EditorGUILayout.LabelField("monitoring bomb count also helps", style);
+		EditorGUILayout.LabelField("can result in infinite loops", style);
+		EditorGUILayout.Space();
+
 		EditorGUILayout.PropertyField(damageProp);
 		EditorGUILayout.Space();
 

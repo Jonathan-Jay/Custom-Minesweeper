@@ -1,11 +1,13 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class BombListItem : MonoBehaviour
 {
-	public BombCategoryItem categoryItem;
+	[NonSerialized] public BombCategoryItem categoryItem;
 	[SerializeField] Image bombIcon;
 	[SerializeField] TMPro.TMP_Text nameText;
+	[SerializeField] TMPro.TMP_Text linkedSpawnsText;
 	[SerializeField] TMPro.TMP_InputField countInput;
 	[SerializeField] TMPro.TMP_InputField damageInput;
 	[SerializeField] RawImage patternBG;
@@ -21,6 +23,7 @@ public class BombListItem : MonoBehaviour
 
 		bombIcon.sprite = bombPair.bomb.sprite[0];
 		nameText.text = bombPair.bomb.name;
+		linkedSpawnsText.text = bombPair.bomb.GetBombCount() == 1 ? "" : ("x" + bombPair.bomb.GetBombCount());
 		categoryItem.customizer.SetFieldTextContextual(countInput, bombPair.realCount, 0,
 				categoryItem.customizer.regularInputField, categoryItem.customizer.emptyInputField);
 		categoryItem.customizer.SetFieldTextContextual(damageInput, bombPair.bomb.damage, 0,
@@ -53,7 +56,7 @@ public class BombListItem : MonoBehaviour
 		{
 			if (bombPair.realCount == res)	return;
 
-			bombPair.realCount = Mathf.Max(0, res);
+			bombPair.realCount = Mathf.Max(0, res) / bombPair.bomb.GetBombCount() * bombPair.bomb.GetBombCount();
 
 			categoryItem.customizer.ForceUpdate();
 			categoryItem.UpdateCount();

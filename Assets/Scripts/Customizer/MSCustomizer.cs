@@ -30,7 +30,7 @@ public class MSCustomizer : MonoBehaviour
 		forceUpdate = true;
 		foreach (BombCategory bombCategory in visuals.game.bombCategories)
 			foreach (BombPair bombPair in bombCategory.bombOptions)
-				bombPair.count = bombPair.realCount;
+				bombPair.count = bombPair.realCount / bombPair.bomb.GetBombCount() * bombPair.bomb.GetBombCount();
 	}
 
 	void Awake()

@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BombCategory
   bombOptions:
   - bomb: {fileID: 11400000, guid: c40a6d55a5cf3404bb20de9c9060e498, type: 2}
-    count: 20
+    count: 0
   - bomb: {fileID: 11400000, guid: 48da3d61de3040a42881549695a19a87, type: 2}
-    count: 20
+    count: 0
   - bomb: {fileID: 11400000, guid: 6300044d27ae81347bd6223a67e76552, type: 2}
-    count: 20
+    count: 0
   - bomb: {fileID: 11400000, guid: 2644b5ecd714f9f48920df73348fa1e3, type: 2}
-    count: 20
+    count: 0

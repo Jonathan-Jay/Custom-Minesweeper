@@ -5,8 +5,8 @@ using Random = System.Random;
 [CreateAssetMenu(fileName = "Bomb", menuName = "Bomb")]
 public class Bomb : ScriptableObject, INode
 {
-	Bomb() => sprite = new Sprite[1];
-	
+	public Bomb() => sprite = new Sprite[1];
+
 	public Sprite[] sprite;
 	public int damage = 1;
 	[SerializeField] Vector2Int offset = new Vector2Int(1, 1);
@@ -15,20 +15,14 @@ public class Bomb : ScriptableObject, INode
 	public Vector2Int GetHintSize() => hintSize;
 	[SerializeField] int[] hintGrid = {1, 1, 1, 1, 0, 1, 1, 1, 1};
 	
-
+	// If larger than 1, will use MultiPos
 	public virtual int GetBombCount() => 1;
 
 	// z pos stores the sprite index
-	public virtual Vector3Int GetPos(Vector2Int size, Random random)
-	{
-		return new Vector3Int(random.Next(0, size.x), random.Next(0, size.y), 0);
-	}
+	public virtual Vector3Int GetPos(Vector2Int size, Random random) => new Vector3Int(random.Next(0, size.x), random.Next(0, size.y), 0);
 
 	// z pos stores the sprite index
-	public virtual Vector3Int[] GetMultiPos(Vector2Int size, Random random)
-	{
-		return null;
-	}
+	public virtual Vector3Int[] GetMultiPos(Vector2Int size, Random random) => null;
 
 	public void UpdateHints(Vector2Int bombPos, NodeGrid<Hint> gameHintGrid, bool flag, int multiplier)
 	{

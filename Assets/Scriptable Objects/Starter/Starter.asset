@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Starter
   m_EditorClassIdentifier: Assembly-CSharp::BombCategory
   bombOptions:
+  - bomb: {fileID: 11400000, guid: 48dd3a4a58925f14aa008f797aed0e61, type: 2}
+    count: 0
   - bomb: {fileID: 11400000, guid: 3c4b28af0aff5204094c47687abe127a, type: 2}
     count: 20
   - bomb: {fileID: 11400000, guid: b17f4b2a854cb3f408fdd2b2571951bc, type: 2}
